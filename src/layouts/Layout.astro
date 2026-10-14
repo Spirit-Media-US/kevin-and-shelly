@@ -32,9 +32,14 @@ const canonicalURL = siteOrigin ? new URL(Astro.url.pathname, siteOrigin).href :
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const socials: { label: string; url: string }[] = settings?.socials ?? [];
 // Black logo on light bands, white logo on dark bands and over photos (Kevin 2026-10-14).
-const logoLight = settings?.logo ? urlFor(settings.logo).height(132).format('png').url() : null;
-const logoDark = settings?.logoOnDark ? urlFor(settings.logoOnDark).height(132).format('png').url() : null;
-const headerLogo = overlayHeader ? logoDark : logoLight;
+// Width attribute derived from the Sanity asset id (image-<hash>-<W>x<H>-png) so a swapped logo never causes layout shift.
+const ratio = (img: any) => {
+  const m = /-(\d+)x(\d+)-/.exec(img?.asset?._ref ?? '');
+  return m ? Number(m[1]) / Number(m[2]) : 3.5;
+};
+const logo = (img: any, h: number) => (img ? { src: urlFor(img).height(h * 3).format('png').url(), w: Math.round(h * ratio(img)), h } : null);
+const headerLogo = overlayHeader ? logo(settings?.logoOnDark, 45) : logo(settings?.logo, 45);
+const footerLogo = logo(settings?.logoOnDark, 54);
 ---
 <!doctype html>
 <html lang="en">
@@ -74,7 +79,7 @@ const headerLogo = overlayHeader ? logoDark : logoLight;
       <div class="container-site header-inner">
         <a href="/" class="wordmark" aria-label={`${SITE_NAME} home`}>
           {headerLogo
-            ? <img class="logo-img" src={headerLogo} alt={SITE_NAME} width="139" height="45" />
+            ? <img class="logo-img" src={headerLogo.src} alt="Kevin and Shelly" width={headerLogo.w} height={headerLogo.h} />
             : SITE_NAME}
         </a>
         <nav class="nav-desktop" aria-label="Main">
@@ -99,7 +104,7 @@ const headerLogo = overlayHeader ? logoDark : logoLight;
       <div class="container-site footer-grid">
         <div class="footer-brand">
           <a href="/" class="wordmark" aria-label={`${SITE_NAME} home`}>
-            {logoDark ? <img class="logo-img logo-footer" src={logoDark} alt={SITE_NAME} width="170" height="54" loading="lazy" /> : SITE_NAME}
+            {footerLogo ? <img class="logo-img logo-footer" src={footerLogo.src} alt="Kevin and Shelly" width={footerLogo.w} height={footerLogo.h} loading="lazy" /> : SITE_NAME}
           </a>
           {settings?.tagline && <p class="text-soft">{settings.tagline}</p>}
           {settings?.location && <p class="text-soft">{settings.location}</p>}
