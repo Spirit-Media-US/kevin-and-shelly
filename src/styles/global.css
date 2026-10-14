@@ -133,8 +133,8 @@
 }
 
 /* Episode rows */
-.ep-row { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr); gap: 4px 20px; padding-block: 14px; border-top: 1px solid var(--color-line-dark); align-items: baseline; }
-.ep-word { font-family: var(--font-display); font-size: 21px; }
+.ep-row { display: grid; grid-template-columns: minmax(0, 11em) minmax(0, 1fr); gap: 4px 20px; padding-block: 14px; border-top: 1px solid var(--color-line-dark); align-items: baseline; }
+.ep-word { font-family: var(--font-display); font-size: 21px; line-height: 1.2; }
 @media (max-width: 560px) { .ep-row { grid-template-columns: 1fr; } }
 
 /* Shared layout helpers */
