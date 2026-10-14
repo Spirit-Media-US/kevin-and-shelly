@@ -116,14 +116,17 @@ const langCovers = fhbEditions.editions
 // SPEED IS PER PIXEL, NOT PER LOOP: 100/23 s per cover keeps the 2026-09-24 on-screen speed
 // for any row length, both rows.
 const SECONDS_PER_COVER = 100 / 23;
+// showTitle={false}: the host page supplies its own section heading (kevinandshelly.com books page).
+interface Props { showTitle?: boolean; }
+const { showTitle = true } = Astro.props;
 const rows = [
 	{ covers, reverse: false, label: '25 Audience Editions — For Every Son and Daughter' },
 	{ covers: langCovers, reverse: true, label: `${LANGUAGE_TOTAL} Language Editions` },
 ].filter((r) => r.covers.length > 0);
 ---
 
-<section class="fhbm" aria-labelledby="fhbm-title">
-	<h2 id="fhbm-title" class="fhbm-title">Father&rsquo;s Heart Bible™ + Divine Voice Color™</h2>
+<section class={showTitle ? 'fhbm' : 'fhbm fhbm--untitled'} aria-labelledby={showTitle ? 'fhbm-title' : undefined} aria-label={showTitle ? undefined : "Father's Heart Bible editions"}>
+	{showTitle && <h2 id="fhbm-title" class="fhbm-title">Father&rsquo;s Heart Bible™ + Divine Voice Color™</h2>}
 
 	<!-- The strip. The track holds the covers TWICE and travels exactly -50%, so the
 	     second copy is under the cursor at the moment the first wraps — that is what
@@ -174,6 +177,7 @@ const rows = [
 	@media (min-width: 1024px) {
 		.fhbm { padding-top: 4rem; }
 	}
+	.fhbm.fhbm--untitled { padding-top: 0; background-color: transparent; }
 	.fhbm-title {
 		font-family: var(--font-display);
 		color: var(--color-ink);
