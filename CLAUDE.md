@@ -49,7 +49,8 @@ Featured on fathersheartbible.com (leadership page, /podcast) and spiritmediapub
 | Home | Podcast block, episodes, books, latest posts, upcoming events | `podcastShow`, `podcastEpisode`, `book`, `blogPost`, `event` |
 | Story | Heading, hero, intro, story sections (repeatable), ministries | `storyPage`, `ministry` |
 | Podcast | Show description, artwork, listen links, every episode | `podcastShow`, `podcastEpisode` |
-| Books | Every book (cover, author, description, link, order), publisher block | `book`, `ministry` |
+| Books | Section labels; every book (section: shelly/kevin/fhb, cover, description, link, order); publisher block | `booksPage`, `book`, `ministry` |
+| Books | FHB block: marquee (R2 cards, same keys as fathersheartbible.com/print), chips, back-cover copy, buttons, tagline | code — FHB's verbatim brand copy, mirrors fathersheartbible.com; marquee labels hardcoded in CoverMarquee.astro (25 / 34 as of 2026-10-14) |
 | Blog | Posts (SMP blog protocol) | `blogPost` |
 | Events | Page text, speaking request text, every event | `eventsPage`, `event` |
 | Contact | Heading, intro, image | `contactPage` |
