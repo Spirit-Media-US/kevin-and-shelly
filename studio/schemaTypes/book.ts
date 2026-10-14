@@ -5,6 +5,7 @@ export default {
   fields: [
     { name: 'title', title: 'Title', type: 'string', validation: (Rule: any) => Rule.required() },
     { name: 'subtitle', title: 'Subtitle', type: 'string' },
+    { name: 'section', title: 'Books Page Section', type: 'string', options: { list: [{ title: 'New from Shelly (top)', value: 'shelly' }, { title: "Kevin's Books", value: 'kevin' }, { title: "Father's Heart Bible", value: 'fhb' }] }, initialValue: 'kevin' },
     { name: 'author', title: 'Author', type: 'string', options: { list: ['Kevin White', 'Shelly White', 'Kevin & Shelly White', 'Spirit Media Publishing'] } },
     { name: 'cover', title: 'Cover', type: 'image', fields: [{ name: 'alt', title: 'Alt Text', type: 'string' }] },
     { name: 'description', title: 'Description', type: 'text', rows: 4 },

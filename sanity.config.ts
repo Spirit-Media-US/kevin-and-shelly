@@ -10,6 +10,7 @@ const SINGLETONS = [
 	{ id: 'homePage', title: 'Home Page' },
 	{ id: 'storyPage', title: 'Story Page' },
 	{ id: 'podcastShow', title: 'Podcast Show' },
+	{ id: 'booksPage', title: 'Books Page' },
 	{ id: 'eventsPage', title: 'Events Page' },
 	{ id: 'contactPage', title: 'Contact Page' },
 ];

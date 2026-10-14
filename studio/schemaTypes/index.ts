@@ -1,5 +1,6 @@
 import blogPost from './blogPost';
 import book from './book';
+import booksPage from './booksPage';
 import contactPage from './contactPage';
 import event from './event';
 import eventsPage from './eventsPage';
@@ -17,6 +18,7 @@ export const schemaTypes: any[] = [
   podcastShow,
   podcastEpisode,
   book,
+  booksPage,
   ministry,
   blogPost,
   eventsPage,

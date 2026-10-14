@@ -35,6 +35,11 @@
   --color-denim-deep: #233a4f;
   --color-gold: #e3ad3a;
   --color-gold-deep: #c99428;
+
+  /* Divine Voice Color screen palette — same values as fathersheartbible.com /read and VoiceChips */
+  --color-voice-father: #2563eb;
+  --color-voice-son: #c8102e;
+  --color-voice-spirit: #6a3fa0;
 }
 
 :root {

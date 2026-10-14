@@ -1,0 +1,254 @@
+---
+// FHB cover marquee — Kevin 2026-09-24.
+//
+// "Scrolling marquee of 3D image thumbnails of all FHB covers as shown on /print",
+// with the title above and the FATHER | SON | SPIRIT chips under it. The tagline
+// moved below the homepage's two buttons 2026-09-24 (Kevin), so it closes the section.
+// Kevin ruled 2026-09-24 that the block sits DIRECTLY BELOW THE FOLD, not above it,
+// "so it doesn't affect the psi" — the hero above is untouched and stays the LCP element.
+//
+// Engineering constraints (rules/performance-gate.md, and the job brief):
+//   • CSS transform animation only — no JS loop, nothing driving it per frame.
+//   • Explicit width/height on every thumbnail so nothing shifts as it loads.
+//   • Every thumbnail lazy-loaded: legitimate now that the block is below the fold.
+//   • prefers-reduced-motion: reduce → no motion at all; the strip becomes a
+//     normal horizontally-scrollable row.
+//   • No vh/svh anywhere.
+//
+// The images are the SAME R2 keys fathersheartbible.com/print serves. No new art is
+// rendered and nothing is uploaded — the marquee is a second consumer of what /print
+// already shows.
+import fhbEditions from '../data/fhb-editions.json';
+import VoiceChips from './VoiceChips.astro';
+
+// This repo has no card-art.ts (that resolver lives in the FHB repo). The same R2
+// keys are named directly here. These are the keys /print serves today; if FHB
+// re-points a card to a new key, this list is the place that follows it.
+const BASE = 'https://assets.spiritmediapublishing.com/FHB/print';
+const cardUrl = (key: string) =>
+	key.startsWith('lp-') ? `${BASE}/lp/v4/${key}-600.webp` : `${BASE}/${key}-600.webp`;
+const FHB = 'https://fathersheartbible.com';
+const PRINT = `${FHB}/print/`;
+
+// kevinandshelly.com copy (2026-10-14), taken from the SMP site's port. Kevin: every cover links to
+// the FHB PRINT page (not individual product pages). Row labels match fathersheartbible.com as of
+// 2026-10-14 — if FHB's counts change, update LABELS below.
+// Originally: MATCHES THE FHB HOMEPAGE MARQUEE (Kevin 2026-10-07: "SMP marquee showing like FHB marquee"):
+// two rows — the audience editions, general colours and Large Print, then every LANGUAGE
+// edition running the opposite way with its English name under it — each cover linking to its
+// own product page on fathersheartbible.com. Same list, order and row titles as the FHB repo's
+// src/components/CoverMarquee.astro.
+const DVC = [
+	['athletes', "Athlete's Bible"],
+	['chosen', 'Chosen Bible'],
+	['couples', "Couple's Bible"],
+	['dads', "Dad's Bible"],
+	['first-responders', "First Responder's Bible"],
+	['graduates', "Graduate's Bible"],
+	['grandparents', "Grandparent's Bible"],
+	['intercessors', "Intercessor's Bible"],
+	['mens', "Men's Bible"],
+	['moms', "Mom's Bible"],
+	['nurses', "Nurse's Bible"],
+	['pastors', "Pastor's Bible"],
+	['peace', 'Peace Bible'],
+	['presidents', "President's Bible"],
+	['recovery', 'Recovery Bible'],
+	['seekers', "Seeker's Bible"],
+	['seventeen', 'Seventeen Bible'],
+	['soldiers', "Soldier's Bible"],
+	['teachers', "Teacher's Bible"],
+	['teen', 'Teen Bible'],
+	['womens', "Women's Bible"],
+	['worship-leaders', "Worship Leader's Bible"],
+	['journaling', 'She Hears Her Father’s Voice Journaling Bible'],
+];
+const GENERAL = [
+	['general-regular-charcoal', 'Charcoal edition'],
+	['general-regular-plum', 'Plum edition'],
+	['general-regular-white', 'White edition'],
+];
+const LARGE_PRINT = [
+	['lp-vol1', 'Large Print Volume 1'],
+	['lp-vol2', 'Large Print Volume 2'],
+	['lp-vol3', 'Large Print Volume 3'],
+	['lp-set', 'Large Print three-volume set'],
+];
+
+// Displayed box is 180 CSS px wide (1.5x the original 120 — Kevin 2026-09-24). The
+// source cards are 600 wide, so even a 2x screen draws 360 of 600 available pixels.
+// Every card is 600x764 except the 8x10 journaling card (600x725), so height is
+// computed from each card's own ratio — a shared number would letterbox it and report
+// the wrong aspect to the browser. width/height are the DISPLAY size (180x229 and
+// 180x218), which is what protects CLS.
+const W = 180;
+const H = (key: string) => Math.round((W * (key === 'dvc-journaling' ? 725 : 764)) / 600);
+const covers = [
+	...DVC.map(([slug, name]) => ({
+		key: `dvc-${slug}`,
+		name,
+		href: PRINT,
+	})),
+	...GENERAL.map(([key, name]) => ({ key, name, href: PRINT })),
+	...LARGE_PRINT.map(([key, name]) => ({ key, name, href: PRINT })),
+].map((c) => ({ ...c, src: cardUrl(c.key), h: H(c.key) }));
+
+// LANGUAGE ROW: the language editions from src/data/fhb-editions.json — the snapshot the
+// bookstore build writes from the FHB repo's own edition data (BookstoreBody.astro), so the
+// languages, their built-cover cards (360px, as on FHB) and their pages are never retyped here.
+// Reverse order because the row travels left-to-right: covers then ARRIVE A→Z (as on FHB).
+const LANGUAGE_TOTAL = 34; // fathersheartbible.com label, 2026-10-14
+const langCovers = fhbEditions.editions
+	.filter((e) => e.group === 'language')
+	.reverse()
+	.map((e) => {
+		const [name, ed] = e.display_title.split(' — ');
+		return {
+			key: e.href,
+			name: `${name} (${ed.replace(/ Edition$/, '')})`,
+			caption: ed.replace(/ Edition$/, ''),
+			href: `${PRINT}#language-editions`,
+			src: e.img,
+			h: H('lang'),
+		};
+	});
+
+// SPEED IS PER PIXEL, NOT PER LOOP: 100/23 s per cover keeps the 2026-09-24 on-screen speed
+// for any row length, both rows.
+const SECONDS_PER_COVER = 100 / 23;
+const rows = [
+	{ covers, reverse: false, label: '25 Audience Editions — For Every Son and Daughter' },
+	{ covers: langCovers, reverse: true, label: `${LANGUAGE_TOTAL} Language Editions` },
+].filter((r) => r.covers.length > 0);
+---
+
+<section class="fhbm" aria-labelledby="fhbm-title">
+	<h2 id="fhbm-title" class="fhbm-title">Father&rsquo;s Heart Bible™ + Divine Voice Color™</h2>
+
+	<!-- The strip. The track holds the covers TWICE and travels exactly -50%, so the
+	     second copy is under the cursor at the moment the first wraps — that is what
+	     makes the loop seamless without any JS. aria-hidden on the duplicate so a
+	     screen reader hears each cover once. -->
+	{rows.map((row) => (
+		<>
+		<p class="fhbm-label">{row.label}</p>
+		<div class="fhbm-viewport">
+			<div
+				class={row.reverse ? 'fhbm-track fhbm-track--reverse' : 'fhbm-track'}
+				style={`animation-duration: ${(row.covers.length * SECONDS_PER_COVER).toFixed(1)}s;`}
+			>
+				{[0, 1].map((copy) => (
+					<ul class="fhbm-row" aria-hidden={copy === 1 ? 'true' : undefined}>
+						{row.covers.map((c) => (
+							<li>
+								<a href={c.href} tabindex={copy === 1 ? -1 : undefined}>
+									<img
+										src={c.src}
+										alt={copy === 1 ? '' : `Father's Heart Bible — ${c.name}`}
+										width={W}
+										height={c.h}
+										loading="lazy"
+										decoding="async"
+										fetchpriority={'caption' in c ? 'low' : undefined}
+									/>
+									{'caption' in c && <span class="fhbm-cap">{c.caption}</span>}
+								</a>
+							</li>
+						))}
+					</ul>
+				))}
+			</div>
+		</div>
+		</>
+	))}
+
+	<div class="fhbm-chips"><VoiceChips size="1.25rem" class="mb-0" /></div>
+</section>
+
+<style>
+	.fhbm {
+		background-color: var(--color-stone);
+		padding: 3rem 0 0;
+		overflow: hidden;
+	}
+	@media (min-width: 1024px) {
+		.fhbm { padding-top: 4rem; }
+	}
+	.fhbm-title {
+		font-family: var(--font-display);
+		color: var(--color-ink);
+		text-align: center;
+		margin: 0 1.5rem 2rem;
+		font-weight: 500;
+		line-height: 1.25;
+		letter-spacing: -0.01em;
+		font-size: clamp(1.35rem, 3.4vw, 2.5rem);
+	}
+	/* "On one line" is a desktop requirement. Below 768px a forced single line would
+	   shrink the type past legibility, so it wraps there instead (brief, §on one line). */
+	@media (min-width: 768px) {
+		.fhbm-title { white-space: nowrap; }
+	}
+	.fhbm-viewport { overflow: hidden; }
+	.fhbm-track {
+		display: flex;
+		width: max-content;
+		will-change: transform;
+		/* 100s, not 70s: the 1.5x tiles make the track 200/140 as long, so the duration
+		   scales with it to keep the same on-screen speed (~px per second). */
+		animation: fhbm-scroll 100s linear infinite;
+	}
+	.fhbm-row {
+		display: flex;
+		align-items: flex-end;
+		gap: 1.25rem;
+		margin: 0;
+		padding: 0 0.625rem;
+		list-style: none;
+	}
+	.fhbm-row img {
+		display: block;
+		width: 180px;
+		height: auto;
+	}
+	/* The language row runs the other way: same keyframes played backwards. */
+	.fhbm-track--reverse { animation-direction: reverse; }
+	/* Row title: FHB /print's eyebrow style, as on the FHB homepage marquee (one shade darker:
+	   #71717a on this pink band is under 4.5:1). */
+	.fhbm-label {
+		font-family: var(--font-sans);
+		color: var(--color-soft);
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		text-align: center;
+		margin: 0 1.5rem 0.75rem;
+	}
+	.fhbm-viewport + .fhbm-label { margin-top: 1.75rem; }
+	/* English name under each language cover, centred under the FRONT board (x 24..466 of
+	   every 600px language card), as on the FHB homepage. */
+	.fhbm-cap {
+		display: block;
+		margin-top: 0.4rem;
+		margin-left: 4%;
+		width: 73.67%;
+		text-align: center;
+		font-family: var(--font-body);
+		color: var(--color-soft);
+		font-size: 0.8rem;
+		line-height: 1.3;
+	}
+	.fhbm-row a { display: block; text-decoration: none; }
+	@keyframes fhbm-scroll {
+		from { transform: translate3d(0, 0, 0); }
+		to { transform: translate3d(-50%, 0, 0); }
+	}
+	/* No motion for anyone who asked for none: the strip stops and becomes a plain
+	   scrollable row so every cover is still reachable. */
+	@media (prefers-reduced-motion: reduce) {
+		.fhbm-track { animation: none; }
+		.fhbm-viewport { overflow-x: auto; }
+	}
+	.fhbm-chips { margin-top: 2rem; }
+</style>
