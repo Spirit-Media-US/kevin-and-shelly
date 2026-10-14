@@ -1,0 +1,45 @@
+---
+// Contact — emails are never printed as plain mailto: (MailtoLink assembles them in the browser).
+import Layout from '../layouts/Layout.astro';
+import MailtoLink from '../components/MailtoLink.astro';
+import { sanityClient, urlFor } from '../lib/sanity';
+import { getSettings } from '../lib/site';
+
+const page = await sanityClient.fetch(`*[_type == "contactPage"][0]{heading, intro, image}`);
+const settings = await getSettings();
+const socials: { label: string; url: string }[] = settings?.socials ?? [];
+---
+
+<Layout title="Contact | Kevin & Shelly White" description={page.intro}>
+  <main id="main-content">
+    <section class="band band-light">
+      <div class="container-site split split-top">
+        <div class="stack">
+          <p class="eyebrow">Contact</p>
+          <h1 class="type-hero">{page.heading}</h1>
+          <p class="type-lead">{page.intro}</p>
+          <ul class="contact-list">
+            {settings?.kevinEmail && <li><span class="text-soft">Kevin</span><MailtoLink email={settings.kevinEmail} class="link">Email Kevin</MailtoLink></li>}
+            {settings?.shellyEmail && <li><span class="text-soft">Shelly</span><MailtoLink email={settings.shellyEmail} class="link">Email Shelly</MailtoLink></li>}
+          </ul>
+          {socials.length > 0 && (
+            <ul class="social-list">
+              {socials.map((s) => <li><a class="btn btn-ghost" href={s.url} rel="noopener" target="_blank">{s.label}</a></li>)}
+            </ul>
+          )}
+          <div id="ghl-contact-form" class="form-placeholder">Contact form</div>
+        </div>
+        {page.image && (
+          <img class="rounded-photo" src={urlFor(page.image).width(900).height(1100).format('webp').quality(80).url()}
+            width="900" height="1100" loading="eager" decoding="async" alt={page.image.alt ?? ''} />
+        )}
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .contact-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+  .contact-list li { display: grid; grid-template-columns: 70px auto; gap: 12px; align-items: baseline; }
+  .social-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+</style>

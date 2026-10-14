@@ -1,0 +1,87 @@
+---
+// Story (About) — hero photo, intro, story sections alternating light bands, then
+// the Father's Heart Bible + Spirit Media Publishing on a dark band with links to both.
+import Layout from '../layouts/Layout.astro';
+import { sanityClient, urlFor } from '../lib/sanity';
+
+const page = await sanityClient.fetch(`*[_type == "storyPage"][0]{
+  heading, intro, heroImage,
+  chapters[]{heading, body, image},
+  ministries[]->{name, summary, url, linkLabel, image}
+}`);
+const heroSrc = (w: number) => urlFor(page.heroImage).width(w).height(Math.round(w * 0.42)).format('webp').quality(80).url();
+const heroSrcset = `${heroSrc(640)} 640w, ${heroSrc(1200)} 1200w, ${heroSrc(2000)} 2000w`;
+---
+
+<Layout title="Our Story | Kevin & Shelly White" description={page.intro}>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
+    <link rel="preload" as="image" href={heroSrc(1200)} imagesrcset={heroSrcset} imagesizes="100vw" fetchpriority="high" />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      name: 'Our Story',
+      about: [{ '@type': 'Person', name: 'Kevin White' }, { '@type': 'Person', name: 'Shelly White' }],
+    })}></script>
+  </Fragment>
+
+  <main id="main-content">
+    <section class="page-hero">
+      <img class="page-hero-img" src={heroSrc(1200)} srcset={heroSrcset} sizes="100vw" width="1600" height="672"
+        alt={page.heroImage?.alt ?? 'Kevin and Shelly White'} fetchpriority="high" loading="eager" decoding="async" />
+      <div class="container-site page-hero-text">
+        <h1 class="type-hero">{page.heading}</h1>
+        <p class="type-lead">{page.intro}</p>
+      </div>
+    </section>
+
+    {page.chapters?.map((c: any, i: number) => (
+      <section class={`band ${i % 2 === 0 ? 'band-light-deep' : 'band-light'}`}>
+        <div class={`container-site split ${i % 2 === 1 ? 'split-reverse' : ''}`}>
+          {i % 2 === 0 && c.image && (
+            <img class="rounded-photo" src={urlFor(c.image).width(900).height(640).format('webp').quality(80).url()}
+              width="900" height="640" loading="lazy" decoding="async" alt={c.image.alt ?? ''} />
+          )}
+          <div class="stack">
+            <h2 class="type-h2">{c.heading}</h2>
+            <div class="prose-story type-lead">{(c.body ?? '').split('\n\n').map((para: string) => <p>{para}</p>)}</div>
+          </div>
+          {i % 2 === 1 && c.image && (
+            <img class="rounded-photo" src={urlFor(c.image).width(900).height(640).format('webp').quality(80).url()}
+              width="900" height="640" loading="lazy" decoding="async" alt={c.image.alt ?? ''} />
+          )}
+        </div>
+      </section>
+    ))}
+
+    {page.ministries?.length > 0 && (
+      <section class="band band-dark" aria-labelledby="lead-heading">
+        <div class="container-site stack">
+          <p class="eyebrow">What we lead</p>
+          <h2 id="lead-heading" class="type-h2">Father's Heart Bible & Spirit Media Publishing</h2>
+          <ul class="ministry-grid">
+            {page.ministries.map((m: any) => (
+              <li class="ministry-card">
+                {m.image && <img class="book-cover ministry-img" src={urlFor(m.image).width(320).format('webp').quality(80).url()} width="320" height="480" loading="lazy" decoding="async" alt={m.image.alt ?? m.name} />}
+                <div class="stack">
+                  <h3 class="type-h3">{m.name}</h3>
+                  <p class="text-soft">{m.summary}</p>
+                  {m.url && <a class="link" href={m.url} rel="noopener">{m.linkLabel ?? 'Visit'}</a>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .page-hero { background: var(--color-stone); }
+  .page-hero-img { width: 100%; height: auto; aspect-ratio: 1600 / 672; object-fit: cover; }
+  .page-hero-text { display: grid; gap: 16px; padding-block: clamp(28px, 4vw, 48px) clamp(40px, 5vw, 64px); }
+  .ministry-grid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+  .ministry-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: start; border-top: 1px solid var(--color-line-dark); padding-top: 24px; }
+  .ministry-img { width: 120px; }
+</style>

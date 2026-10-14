@@ -8,7 +8,21 @@ import sitemap from '@astrojs/sitemap';
 // example.com and grep visibly) instead of shipping silently.
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://example.com',
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      filter: (page) => !page.includes('/studio'),
+      serialize(item) {
+        // Blog posts — highest priority, weekly refresh (SMP blog protocol step 8)
+        if (item.url.includes('/blog/') && !item.url.endsWith('/blog/')) {
+          return { ...item, changefreq: 'weekly', priority: 0.9, lastmod: new Date().toISOString() };
+        }
+        if (item.url.endsWith('/blog/') || item.url.endsWith('/podcast/')) {
+          return { ...item, changefreq: 'weekly', priority: 0.8, lastmod: new Date().toISOString() };
+        }
+        return { ...item, changefreq: 'monthly', priority: 0.6, lastmod: new Date().toISOString() };
+      },
+    }),
+  ],
   build: {
     // Trait 6: Astro inlines small stylesheets, externalizes larger ones.
     // scripts/async-css.mjs converts the externalized bundles to async via the

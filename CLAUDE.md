@@ -1,52 +1,73 @@
-# Spirit Media Template
+# Kevin & Shelly
 
 > **CLAUDE.md belongs in version control — NEVER add it to .gitignore. This file is the shared source of truth for all developers and all Claude Code sessions.**
 
-This site: Spirit Media Template | Repo: github.com/Spirit-Media-US/spirit-media-template | Domain: TBD | Sanity ID: TBD
+This site: Kevin & Shelly | Repo: github.com/Spirit-Media-US/kevin-and-shelly | Domain: kevinandshelly.com (GoDaddy, SMP account) | Sanity ID: a53g9qeq | Registry project: aec0e58e (newsite)
 
-**Migration protocol:** /home/deploy/bin/tools-api/pipelines/migration/CLAUDE.md
+**Build protocol:** /home/deploy/bin/tools-api/pipelines/newsite/CLAUDE.md
+**Blog protocol:** /home/deploy/claude-config/specs/blog-protocol.md
 
 ## Dev Commands
 
-- `npm run dev` -- local preview
-- `npm run build` -- production build to dist/
+- `npm run dev` — local preview
+- `PUBLIC_SITE_URL=https://kevinandshelly.com npm run build` — production build to dist/ (builds the embedded Studio into public/studio first)
+- `git pushd origin dev` — push + upload dist to the dev preview (dev.kevin-and-shelly.pages.dev)
 
-## Mandatory -- Before Starting Work
-Always start Claude sessions from inside this directory:
+## Mandatory — Before Starting Work
 ```
-cd /srv/sites/spirit-media-template && claude
+cd /srv/sites/kevin-and-shelly && claude
+git checkout dev && git pull origin dev
 ```
-Running Claude from ~/ or ~/Sites/ bypasses this project's CLAUDE.md. A pre-edit hook enforces this, but following the workflow prevents warnings and ensures all project rules are loaded.
-
-Then run: `git checkout dev && git pull origin dev`
 
 ## Stack
 
-- Astro 5 + Tailwind CSS v4
-- Sanity Studio (to be configured per new site)
+- Astro 5 + Tailwind CSS v4 (tokens in `src/styles/global.css` `@theme`)
+- Sanity Studio embedded at `/studio` (structure in `sanity.config.ts`, schemas in `studio/schemaTypes/`)
+- Cloudflare Pages: kevin-and-shelly.pages.dev · dev preview: dev.kevin-and-shelly.pages.dev
 
 ## Purpose
 
-This is the **template repo** used as the starting point for all new SMP client sites. It contains the standard Astro + Tailwind + Sanity scaffold with Lefthook hooks, Biome config, and .gitignore pre-configured.
+Home of Kevin & Shelly White and the **Revived by Our Father's Love** podcast. Replaces kevinwhite.us.
+Featured on fathersheartbible.com (leadership page, /podcast) and spiritmediapublishing.com.
 
-When creating a new site, clone this template and customize the CLAUDE.md with the site-specific details (domain, Sanity ID, port, etc.).
+## Design (approved by Kevin & Shelly 2026-10-14 — mood board 4)
 
-## Status -- as of 2026-04-08
+- Hybrid page: alternating light stone bands (reading) and charcoal bands (podcast art, book covers). No pure white, no pure black.
+- Colors: stone #F4F3F1, stone-deep #EAE8E4, ink #22211F, soft gray #6B6862, charcoal #1B1A19, denim #2F4A63 (accent on light), gold #E3AD3A (accent on dark).
+- Fonts: DM Serif Display (headings) + Karla (body), self-hosted on R2.
+- Home hero: "Beloved on wall" photo, shown UNCROPPED so the word BELOVED shows (Kevin).
+- Nav: Story · Podcast · Books · Blog · Events · Contact. Father's Heart Bible is NOT its own page — it is featured on Story and Books with Spirit Media Publishing.
+- Emails never as plain `mailto:` — always `MailtoLink.astro`.
+- Logo: Shelly is designing it; text wordmark until `siteSettings.logo` is set.
+
+## Sanity Content Audit
+
+| Page | Content block | Where |
+|---|---|---|
+| All | Site name, tagline, SEO description, share image, emails, socials, location, logo | `siteSettings` |
+| Home | Hero image/heading/intro/buttons, story preview, books heading, sign-up text | `homePage` |
+| Home | Podcast block, episodes, books, latest posts, upcoming events | `podcastShow`, `podcastEpisode`, `book`, `blogPost`, `event` |
+| Story | Heading, hero, intro, story sections (repeatable), ministries | `storyPage`, `ministry` |
+| Podcast | Show description, artwork, listen links, every episode | `podcastShow`, `podcastEpisode` |
+| Books | Every book (cover, author, description, link, order), publisher block | `book`, `ministry` |
+| Blog | Posts (SMP blog protocol) | `blogPost` |
+| Events | Page text, speaking request text, every event | `eventsPage`, `event` |
+| Contact | Heading, intro, image | `contactPage` |
+| Static | Nav order, footer structure, JSON-LD, legal line | code |
+
+## Status — as of 2026-10-14
 
 ### Completed
-- Astro 5 + Tailwind v4 scaffold
-- Lefthook hooks (block-main-push, large-file blocker, secret scanner)
-- Biome config
-- Standard .gitignore (blocks media, .env, node_modules)
-- Template CLAUDE.md ready for customization
+- Phase 2 infrastructure (repo, Sanity, CF Pages) · schemas · images in Sanity · content seeded (approved copy + marked placeholders) · all pages built · blog per protocol
 
 ### Still Pending
-- None -- this is a template, not a live site
+- Placeholders Kevin & Shelly will deliver: story sections, Zacchaeus description + Amazon link, blog posts, events, logo
+- Sign-up / contact / speaking forms (GHL) — placeholder divs `ghl-signup-form`, `ghl-contact-form`, `ghl-speaking-form`
+- Sanity → CF Pages webhook, CF Pages env PUBLIC_SITE_URL, perf audit, Phase 5+ QA, launch
 
 ## Rules
 
-- All work goes to the **dev** branch -- never push directly to main
-- Only merge dev to main when Kevin says "push to main"
-- Every site cloned from this template must have a customized CLAUDE.md
+- All work goes to the **dev** branch — never push directly to main
+- Only merge dev to main via `auto-merge-dev.sh` with Kevin's approval
 - public/_headers must include CSP and security headers
-- 404 page should have noindex meta tag
+- Media never in git — images live in Sanity

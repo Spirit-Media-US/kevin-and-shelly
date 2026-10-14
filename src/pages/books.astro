@@ -1,0 +1,97 @@
+---
+// Books — one page for all titles (Kevin's, Shelly's, the Father's Heart Bible), covers on the
+// charcoal band, then Spirit Media Publishing + Father's Heart Bible links.
+import Layout from '../layouts/Layout.astro';
+import { sanityClient, urlFor } from '../lib/sanity';
+
+const data = await sanityClient.fetch(`{
+  "books": *[_type == "book"] | order(order asc){title, subtitle, author, cover, description, buyUrl, buyLabel},
+  "ministries": *[_type == "ministry"] | order(order asc){name, summary, url, linkLabel}
+}`);
+const { books, ministries } = data;
+const [first, ...rest] = books;
+const cover = (b: any, w: number) => urlFor(b.cover).width(w).format('webp').quality(82).url();
+---
+
+<Layout title="Books | Kevin & Shelly White" description="Books by Kevin and Shelly White and the Father's Heart Bible, published by Spirit Media Publishing. Available worldwide everywhere books are sold.">
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
+    {first && <link rel="preload" as="image" href={cover(first, 520)} imagesrcset={`${cover(first, 360)} 360w, ${cover(first, 520)} 520w`} imagesizes="(max-width: 820px) 60vw, 360px" fetchpriority="high" />}
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: books.map((b: any, i: number) => ({ '@type': 'ListItem', position: i + 1, item: { '@type': 'Book', name: b.title, author: b.author, url: b.buyUrl } })),
+    })}></script>
+  </Fragment>
+
+  <main id="main-content">
+    <section class="band band-dark">
+      <div class="container-site stack">
+        <p class="eyebrow">Books</p>
+        <h1 class="type-hero">Available worldwide everywhere books are sold</h1>
+        {first && (
+          <article class="book-feature">
+            <img class="book-cover" src={cover(first, 520)} srcset={`${cover(first, 360)} 360w, ${cover(first, 520)} 520w`} sizes="(max-width: 820px) 60vw, 360px"
+              width="520" height="780" alt={first.cover?.alt ?? first.title} fetchpriority="high" loading="eager" decoding="async" />
+            <div class="stack">
+              <h2 class="type-h2">{first.title}</h2>
+              {first.subtitle && <p class="eyebrow">{first.subtitle}</p>}
+              <p class="text-soft">{first.author}</p>
+              <p class="type-lead">{first.description}</p>
+              {first.buyUrl && <div class="btn-row"><a class="btn btn-primary" href={first.buyUrl} rel="noopener">{first.buyLabel ?? 'Get the book'}</a></div>}
+            </div>
+          </article>
+        )}
+      </div>
+    </section>
+
+    <section class="band band-dark band-books" aria-label="All books">
+      <div class="container-site">
+        <ul class="books-list">
+          {rest.map((b: any) => (
+            <li class="book-item">
+              <img class="book-cover" src={cover(b, 360)} width="360" height="540" loading="lazy" decoding="async" alt={b.cover?.alt ?? `${b.title} cover`} />
+              <div class="stack">
+                <h2 class="type-h3">{b.title}</h2>
+                <p class="text-soft">{b.author}</p>
+                <p class="text-soft book-desc">{b.description}</p>
+                {b.buyUrl
+                  ? <a class="link" href={b.buyUrl} rel="noopener" target="_blank">{b.buyLabel ?? 'Get the book'}</a>
+                  : <p class="eyebrow">{b.buyLabel ?? 'Available everywhere books are sold'}</p>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    {ministries?.length > 0 && (
+      <section class="band band-light">
+        <div class="container-site stack">
+          <p class="eyebrow">Publisher</p>
+          <h2 class="type-h2">Published by Spirit Media Publishing</h2>
+          <ul class="pub-list">
+            {ministries.map((m: any) => (
+              <li class="stack">
+                <h3 class="type-h3">{m.name}</h3>
+                <p class="text-soft">{m.summary}</p>
+                {m.url && <a class="link" href={m.url} rel="noopener">{m.linkLabel ?? 'Visit'}</a>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .book-feature { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: center; margin-top: 16px; }
+  @media (max-width: 820px) { .book-feature { grid-template-columns: 1fr; } .book-feature .book-cover { max-width: 60vw; } }
+  .band-books { padding-top: 0; }
+  .books-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 44px 48px; border-top: 1px solid var(--color-line-dark); padding-top: 48px; }
+  .book-item { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .book-desc { font-size: 15.5px; }
+  @media (max-width: 480px) { .book-item { grid-template-columns: 110px minmax(0, 1fr); } }
+  .pub-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px; }
+</style>

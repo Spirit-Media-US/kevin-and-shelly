@@ -1,11 +1,11 @@
 import { createClient } from '@sanity/client';
 import { createImageUrlBuilder } from '@sanity/image-url';
 
-// TODO: Replace with the new site's Sanity project ID
+// Sanity project a53g9qeq (Kevin & Shelly). useCdn false so webhook rebuilds get fresh content.
 export const sanityClient = createClient({
   projectId: 'a53g9qeq',
   dataset: 'production',
-  useCdn: true,
+  useCdn: false,
   apiVersion: '2024-01-01',
 });
 

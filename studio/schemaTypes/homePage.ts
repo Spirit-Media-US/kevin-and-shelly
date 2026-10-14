@@ -1,0 +1,20 @@
+export default {
+  name: 'homePage',
+  title: 'Home Page',
+  type: 'document',
+  fields: [
+    { name: 'heroImage', title: 'Hero Image', type: 'image', options: { hotspot: true }, fields: [{ name: 'alt', title: 'Alt Text', type: 'string' }] },
+    { name: 'heading', title: 'Heading', type: 'string' },
+    { name: 'intro', title: 'Intro', type: 'text', rows: 3 },
+    { name: 'primaryCtaLabel', title: 'Primary Button Label', type: 'string' },
+    { name: 'primaryCtaUrl', title: 'Primary Button Link', type: 'string' },
+    { name: 'secondaryCtaLabel', title: 'Secondary Button Label', type: 'string' },
+    { name: 'secondaryCtaUrl', title: 'Secondary Button Link', type: 'string' },
+    { name: 'storyHeading', title: 'Story Preview Heading', type: 'string' },
+    { name: 'storyText', title: 'Story Preview Text', type: 'text', rows: 4 },
+    { name: 'storyImage', title: 'Story Preview Image', type: 'image', options: { hotspot: true }, fields: [{ name: 'alt', title: 'Alt Text', type: 'string' }] },
+    { name: 'booksHeading', title: 'Books Section Heading', type: 'string' },
+    { name: 'newsletterHeading', title: 'Sign-up Heading', type: 'string' },
+    { name: 'newsletterText', title: 'Sign-up Text', type: 'text', rows: 2 },
+  ],
+};

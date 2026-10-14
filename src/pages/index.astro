@@ -1,61 +1,184 @@
 ---
-// SMP Site Index — 100 Club hero scaffold.
-// See /home/deploy/claude-config/rules/performance-gate.md for the trait list.
-// Keep this hero pattern intact when wiring real Sanity content:
-//   * srcset (mobile <=800w + desktop), fm=webp&q=80
-//   * Fragment slot=head preload with fetchpriority high
-//   * explicit width / height on the img tag
-//   * no animation hooks on the first hero region
+// Home — hero (us) → podcast (dark) → story preview (light) → books (dark) → blog (light) → events + sign-up.
+// Hero keeps the 100 Club pattern: srcset with a ≤640w entry, head preload with fetchpriority,
+// explicit width/height, no animation on the first section (Traits 1, 2, 7, 8).
 import Layout from '../layouts/Layout.astro';
-import '../styles/global.css';
-// import { sanityClient, urlFor } from '../lib/sanity.ts';
+import { sanityClient, urlFor } from '../lib/sanity';
 
-// const hero = await sanityClient.fetch(`*[_type == "homepage"][0].heroImage`);
-// const heroMobile  = urlFor(hero).width(640).format('webp').quality(80).url();
-// const heroDesktop = urlFor(hero).width(1200).format('webp').quality(80).url();
-const heroMobile  = '/hero-placeholder-640.webp';
-const heroDesktop = '/hero-placeholder-1200.webp';
+const data = await sanityClient.fetch(`{
+  "home": *[_type == "homePage"][0],
+  "show": *[_type == "podcastShow"][0]{title, tagline, schedule, description, artwork},
+  "episodes": *[_type == "podcastEpisode"] | order(episodeNumber asc)[0...4]{word, subtitle, episodeNumber},
+  "books": *[_type == "book" && featured == true] | order(order asc)[0...6]{title, author, cover, buyUrl},
+  "posts": *[_type == "blogPost"] | order(publishDate desc)[0...3]{title, excerpt, heroImage, publishDate, "slug": slug.current},
+  "events": *[_type == "event" && date >= now()] | order(date asc)[0...3]{title, date, location, url},
+  "eventsPage": *[_type == "eventsPage"][0]{emptyText}
+}`);
+const { home, show, episodes, books, posts, events, eventsPage } = data;
+
+const heroSrc = (w: number) => urlFor(home.heroImage).width(w).format('webp').quality(80).url();
+// Hero is shown uncropped (Kevin 2026-10-14: the word BELOVED must show). Native width 1527px,
+// so the largest srcset entry stops there and the image centers on wider screens.
+const heroSrcset = `${heroSrc(640)} 640w, ${heroSrc(1200)} 1200w, ${heroSrc(1527)} 1527w`;
+const heroSizes = '(max-width: 1527px) 100vw, 1527px';
+const showIntro = (show?.description ?? '').split('\n\n')[0];
+const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 ---
 
-<Layout title="Site Name — Tagline">
+<Layout title="Kevin & Shelly White | Revived by Our Father's Love">
   <Fragment slot="head">
     <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
-    <link
-      rel="preload"
-      as="image"
-      href={heroDesktop}
-      imagesrcset={`${heroMobile} 640w, ${heroDesktop} 1200w`}
-      imagesizes="(max-width: 640px) 640px, 1200px"
-      fetchpriority="high"
-    />
+    <link rel="preload" as="image" href={heroSrc(1200)} imagesrcset={heroSrcset} imagesizes={heroSizes} fetchpriority="high" />
   </Fragment>
 
-  <main>
-    <!-- HERO — first section: NO data-aos, NO reveal wrapper, NO transform-on-mount (Trait 7) -->
-    <section class="hero-section" style="padding: 48px 24px;">
-      <div class="container-site" style="display: grid; gap: 24px; max-width: 1200px; margin: 0 auto;">
-        <img
-          src={heroDesktop}
-          srcset={`${heroMobile} 640w, ${heroDesktop} 1200w`}
-          sizes="(max-width: 640px) 640px, 1200px"
-          width="1200"
-          height="675"
-          alt="Replace with descriptive alt text for the hero image"
-          fetchpriority="high"
-          loading="eager"
-          decoding="async"
-          style="width: 100%; height: auto; max-width: 1200px;"
-        />
-        <h1 style="font-size: clamp(32px, 5vw, 56px); line-height: 1.15; margin: 0;">
-          Site Name
-        </h1>
-        <p style="font-size: 18px; max-width: 65ch; margin: 0;">
-          Replace this scaffold with the real homepage hero. Keep the srcset / preload / width-height /
-          fetchpriority pattern intact — that combination is what hits 100 Club mobile out of the gate.
-        </p>
+  <main id="main-content">
+    <!-- HERO — first section: no animation hooks (Trait 7) -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <img
+        class="hero-img"
+        src={heroSrc(1200)}
+        srcset={heroSrcset}
+        sizes={heroSizes}
+        width="1527"
+        height="1020"
+        alt={home.heroImage?.alt ?? 'Kevin and Shelly White'}
+        fetchpriority="high"
+        loading="eager"
+        decoding="async"
+      />
+      <div class="container-site hero-text">
+        <h1 id="hero-heading" class="type-hero">{home.heading}</h1>
+        <p class="type-lead">{home.intro}</p>
+        <div class="btn-row">
+          {home.primaryCtaLabel && <a class="btn btn-primary" href={home.primaryCtaUrl}>{home.primaryCtaLabel}</a>}
+          {home.secondaryCtaLabel && <a class="btn btn-ghost" href={home.secondaryCtaUrl}>{home.secondaryCtaLabel}</a>}
+        </div>
       </div>
     </section>
 
-    <!-- Below-fold regions may use reveal-on-scroll wrappers. Keep animation hooks OFF the hero. -->
+    <!-- PODCAST -->
+    {show && (
+      <section class="band band-dark" aria-labelledby="podcast-heading">
+        <div class="container-site split">
+          {show.artwork && (
+            <a href="/podcast" class="art-link">
+              <img
+                src={urlFor(show.artwork).width(900).format('webp').quality(80).url()}
+                srcset={`${urlFor(show.artwork).width(600).format('webp').quality(80).url()} 600w, ${urlFor(show.artwork).width(900).format('webp').quality(80).url()} 900w`}
+                sizes="(max-width: 820px) 100vw, 560px"
+                width="900" height="663" loading="lazy" decoding="async"
+                alt={show.artwork.alt ?? show.title}
+              />
+            </a>
+          )}
+          <div class="stack">
+            <p class="eyebrow">The podcast · {show.schedule}</p>
+            <h2 id="podcast-heading" class="type-h2">{show.title}</h2>
+            <p class="type-lead">{showIntro}</p>
+            {episodes?.length > 0 && (
+              <div class="episodes">
+                {episodes.map((ep: any) => (
+                  <div class="ep-row"><span class="ep-word">{ep.word}</span><span class="text-soft">{ep.subtitle}</span></div>
+                ))}
+              </div>
+            )}
+            <div class="btn-row"><a class="btn btn-primary" href="/podcast">Listen to Revived</a></div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- STORY PREVIEW -->
+    <section class="band band-light" aria-labelledby="story-heading">
+      <div class="container-site split split-reverse">
+        <div class="stack">
+          <p class="eyebrow">Our story</p>
+          <h2 id="story-heading" class="type-h2">{home.storyHeading}</h2>
+          <p class="type-lead">{home.storyText}</p>
+          <div class="btn-row"><a class="btn btn-ghost" href="/story">Read our story</a></div>
+        </div>
+        {home.storyImage && (
+          <img
+            class="rounded-photo"
+            src={urlFor(home.storyImage).width(900).height(640).format('webp').quality(80).url()}
+            srcset={`${urlFor(home.storyImage).width(600).height(427).format('webp').quality(80).url()} 600w, ${urlFor(home.storyImage).width(900).height(640).format('webp').quality(80).url()} 900w`}
+            sizes="(max-width: 820px) 100vw, 560px"
+            width="900" height="640" loading="lazy" decoding="async"
+            alt={home.storyImage.alt ?? 'Kevin and Shelly White'}
+          />
+        )}
+      </div>
+    </section>
+
+    <!-- BOOKS -->
+    {books?.length > 0 && (
+      <section class="band band-dark" aria-labelledby="books-heading">
+        <div class="container-site stack">
+          <p class="eyebrow">Books</p>
+          <h2 id="books-heading" class="type-h2">{home.booksHeading}</h2>
+          <ul class="book-grid">
+            {books.map((b: any) => (
+              <li>
+                <a href="/books" class="book-card">
+                  <img class="book-cover" src={urlFor(b.cover).width(360).format('webp').quality(80).url()} width="360" height="540" loading="lazy" decoding="async" alt={b.cover?.alt ?? `${b.title} cover`} />
+                  <span class="book-title">{b.title}</span>
+                  <span class="text-soft book-author">{b.author}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div class="btn-row"><a class="btn btn-ghost" href="/books">See all books</a></div>
+        </div>
+      </section>
+    )}
+
+    <!-- BLOG -->
+    {posts?.length > 0 && (
+      <section class="band band-light" aria-labelledby="blog-heading">
+        <div class="container-site stack">
+          <p class="eyebrow">From the blog</p>
+          <h2 id="blog-heading" class="type-h2">Latest posts</h2>
+          <ul class="post-grid">
+            {posts.map((p: any) => (
+              <li>
+                <a href={`/blog/${p.slug}`} class="post-card">
+                  {p.heroImage && <img src={urlFor(p.heroImage).width(640).height(400).format('webp').quality(78).url()} width="640" height="400" loading="lazy" decoding="async" alt={p.heroImage.alt ?? ''} />}
+                  <span class="text-soft post-date">{fmt(p.publishDate)}</span>
+                  <span class="post-title">{p.title}</span>
+                  {p.excerpt && <span class="text-soft">{p.excerpt}</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- EVENTS + SIGN-UP -->
+    <section class="band band-light-deep" aria-labelledby="events-heading">
+      <div class="container-site split split-top">
+        <div class="stack">
+          <p class="eyebrow">Events</p>
+          <h2 id="events-heading" class="type-h2">Where we'll be</h2>
+          {events?.length > 0
+            ? <ul class="event-list">{events.map((e: any) => (
+                <li><span class="event-date">{fmt(e.date)}</span><span class="event-title">{e.title}</span>{e.location && <span class="text-soft">{e.location}</span>}</li>
+              ))}</ul>
+            : <p class="type-lead">{eventsPage?.emptyText}</p>}
+          <div class="btn-row"><a class="btn btn-ghost" href="/events">Events & speaking</a></div>
+        </div>
+        <div class="stack signup">
+          <h2 class="type-h3">{home.newsletterHeading}</h2>
+          <p class="text-soft">{home.newsletterText}</p>
+          <div id="ghl-signup-form" class="form-placeholder">Sign-up form</div>
+        </div>
+      </div>
+    </section>
   </main>
 </Layout>
+
+<style>
+.hero { background: var(--color-stone); }
+  .hero-img { width: 100%; max-width: 1527px; height: auto; aspect-ratio: 1527 / 1020; margin-inline: auto; }
+  .hero-text { display: grid; gap: 18px; padding-block: clamp(28px, 4vw, 48px) clamp(48px, 6vw, 72px); }
+</style>
