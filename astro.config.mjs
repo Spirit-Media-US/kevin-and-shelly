@@ -1,13 +1,17 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import { loadEnv } from 'vite';
+
+// Read .env too (git pushd builds without exporting it); CF Pages sets PUBLIC_SITE_URL as an env var.
+const fileEnv = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '');
 
 // Each cloned site MUST set PUBLIC_SITE_URL (in .env locally and in the
 // CF Pages production env). The fallback is intentionally a fake string so a
 // missed configuration is caught in QA (canonical/og:url will render with
 // example.com and grep visibly) instead of shipping silently.
 export default defineConfig({
-  site: process.env.PUBLIC_SITE_URL || 'https://example.com',
+  site: process.env.PUBLIC_SITE_URL || fileEnv.PUBLIC_SITE_URL || 'https://example.com',
   integrations: [
     sitemap({
       filter: (page) => !page.includes('/studio'),
