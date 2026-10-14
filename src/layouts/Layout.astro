@@ -15,6 +15,8 @@ interface Props {
   description?: string;
   ogImage?: string;
   noindex?: boolean;
+  /** Home page: header floats over the hero photo on a semi-transparent charcoal bar (white logo). */
+  overlayHeader?: boolean;
 }
 const settings = await getSettings();
 const {
@@ -22,12 +24,17 @@ const {
   description = settings?.seoDescription ?? '',
   ogImage = settings?.ogImage ? urlFor(settings.ogImage).width(1200).height(630).format('jpg').quality(80).url() : undefined,
   noindex = false,
+  overlayHeader = false,
 } = Astro.props;
 const currentYear = new Date().getFullYear();
 const siteOrigin = (Astro.site && Astro.site.toString().replace(/\/$/, '')) || '';
 const canonicalURL = siteOrigin ? new URL(Astro.url.pathname, siteOrigin).href : Astro.url.pathname;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const socials: { label: string; url: string }[] = settings?.socials ?? [];
+// Black logo on light bands, white logo on dark bands and over photos (Kevin 2026-10-14).
+const logoLight = settings?.logo ? urlFor(settings.logo).height(132).format('png').url() : null;
+const logoDark = settings?.logoOnDark ? urlFor(settings.logoOnDark).height(132).format('png').url() : null;
+const headerLogo = overlayHeader ? logoDark : logoLight;
 ---
 <!doctype html>
 <html lang="en">
@@ -63,11 +70,11 @@ const socials: { label: string; url: string }[] = settings?.socials ?? [];
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
-    <header class="site-header">
+    <header class:list={["site-header", { "is-overlay": overlayHeader }]} id="site-header">
       <div class="container-site header-inner">
         <a href="/" class="wordmark" aria-label={`${SITE_NAME} home`}>
-          {settings?.logo
-            ? <img src={urlFor(settings.logo).height(96).url()} alt={SITE_NAME} height="48" width="160" />
+          {headerLogo
+            ? <img class="logo-img" src={headerLogo} alt={SITE_NAME} width="139" height="45" />
             : SITE_NAME}
         </a>
         <nav class="nav-desktop" aria-label="Main">
@@ -91,7 +98,9 @@ const socials: { label: string; url: string }[] = settings?.socials ?? [];
     <footer class="site-footer band-dark">
       <div class="container-site footer-grid">
         <div class="footer-brand">
-          <a href="/" class="wordmark">{SITE_NAME}</a>
+          <a href="/" class="wordmark" aria-label={`${SITE_NAME} home`}>
+            {logoDark ? <img class="logo-img logo-footer" src={logoDark} alt={SITE_NAME} width="170" height="54" loading="lazy" /> : SITE_NAME}
+          </a>
           {settings?.tagline && <p class="text-soft">{settings.tagline}</p>}
           {settings?.location && <p class="text-soft">{settings.location}</p>}
         </div>
@@ -121,7 +130,10 @@ const socials: { label: string; url: string }[] = settings?.socials ?? [];
       .skip-link:focus { left: 8px; }
       .site-header { background: var(--color-stone); border-bottom: 1px solid var(--color-line); position: relative; z-index: 20; }
       .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; }
-      .wordmark { font-family: var(--font-display); font-size: 24px; text-decoration: none; color: inherit; white-space: nowrap; }
+      .wordmark { font-family: var(--font-display); font-size: 24px; text-decoration: none; color: inherit; white-space: nowrap; display: inline-flex; align-items: center; }
+      .logo-img { height: 45px; width: auto; }
+      .logo-footer { height: 54px; }
+      @media (max-width: 560px) { .logo-img { height: 38px; } }
       .nav-desktop { display: flex; gap: 26px; font-size: 15.5px; font-weight: 500; }
       .nav-desktop a { text-decoration: none; color: var(--color-soft); padding-block: 6px; border-bottom: 2px solid transparent; }
       .nav-desktop a:hover, .nav-desktop a[aria-current='page'] { color: var(--color-ink); border-bottom-color: var(--color-denim); }
@@ -133,6 +145,16 @@ const socials: { label: string; url: string }[] = settings?.socials ?? [];
       .nav-mobile nav a { text-decoration: none; padding: 12px 14px; font-weight: 500; }
       .nav-mobile nav a[aria-current='page'] { color: var(--color-denim); }
       @media (max-width: 820px) { .nav-desktop { display: none; } .nav-mobile { display: block; } }
+
+      /* Home: header floats over the hero (like fathersheartbible.com/print), semi-transparent charcoal */
+      .site-header.is-overlay { position: fixed; inset: 0 0 auto 0; background: var(--color-charcoal-glass); border-bottom-color: transparent; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: background-color 0.25s ease; padding-top: env(safe-area-inset-top, 0px); }
+      .site-header.is-overlay.is-solid { background: var(--color-charcoal-solid); }
+      .is-overlay .wordmark { color: var(--color-on-dark); }
+      .is-overlay .nav-desktop a { color: var(--color-on-dark); }
+      .is-overlay .nav-desktop a:hover, .is-overlay .nav-desktop a[aria-current='page'] { color: var(--color-on-dark); border-bottom-color: var(--color-gold); }
+      .is-overlay .nav-mobile summary span { background: var(--color-on-dark); }
+      .is-overlay .nav-mobile nav { background: var(--color-charcoal); border-color: var(--color-line-dark); }
+      .is-overlay .nav-mobile nav a { color: var(--color-on-dark); }
 
       .site-footer { padding-block: 56px 28px; }
       .footer-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
@@ -146,6 +168,17 @@ const socials: { label: string; url: string }[] = settings?.socials ?? [];
       .footer-legal a { color: var(--color-on-dark); }
       @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr; } }
     </style>
+
+    {overlayHeader && (
+      <script is:inline>
+        (function () {
+          var h = document.getElementById('site-header');
+          var hero = document.querySelector('[data-hero]');
+          if (!h || !hero || !('IntersectionObserver' in window)) return;
+          new IntersectionObserver(function (e) { h.classList.toggle('is-solid', !e[0].isIntersecting); }, { rootMargin: '-80px 0px 0px 0px' }).observe(hero);
+        })();
+      </script>
+    )}
 
     <!-- Deferred third-party JS (Trait 5) — fill GA4 ID when the property is created.
     <script is:inline>

@@ -38,6 +38,8 @@
 }
 
 :root {
+  --color-charcoal-glass: rgb(27 26 25 / 0.45);
+  --color-charcoal-solid: rgb(27 26 25 / 0.95);
   --radius: 4px;
   --max: 1200px;
   --gutter: clamp(16px, 4vw, 32px);

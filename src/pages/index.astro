@@ -25,7 +25,7 @@ const showIntro = (show?.description ?? '').split('\n\n')[0];
 const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 ---
 
-<Layout title="Kevin & Shelly White | Revived by Our Father's Love">
+<Layout title="Kevin & Shelly White | Revived by Our Father's Love" overlayHeader>
   <Fragment slot="head">
     <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
     <link rel="preload" as="image" href={heroSrc(1200)} imagesrcset={heroSrcset} imagesizes={heroSizes} fetchpriority="high" />
@@ -36,6 +36,7 @@ const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'nume
     <section class="hero" aria-labelledby="hero-heading">
       <img
         class="hero-img"
+        data-hero
         src={heroSrc(1200)}
         srcset={heroSrcset}
         sizes={heroSizes}

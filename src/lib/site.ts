@@ -13,7 +13,7 @@ export const NAV = [
 
 export async function getSettings() {
   return sanityClient.fetch(`*[_type == "siteSettings"][0]{
-    siteName, tagline, seoDescription, logo, ogImage, kevinEmail, shellyEmail, location,
+    siteName, tagline, seoDescription, logo, logoOnDark, ogImage, kevinEmail, shellyEmail, location,
     socials[]{label, url}
   }`);
 }
