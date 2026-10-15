@@ -1,12 +1,13 @@
 ---
 // Podcast — Revived by Our Father's Love. Show artwork + description on a dark band,
-// listen links, then every episode ("New ___" big, subtitle small).
+// listen links, then every episode as a card (thumbnail, title, summary) linking to its own page.
 import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity';
+import { EPISODE_FIELDS, EPISODE_FILTER, episodeDate, episodeThumb } from '../lib/site';
 
 const data = await sanityClient.fetch(`{
   "show": *[_type == "podcastShow"][0],
-  "episodes": *[_type == "podcastEpisode"] | order(episodeNumber asc){word, subtitle, episodeNumber, releaseDate, description, thumbnail, youtubeId, audioUrl}
+  "episodes": *[${EPISODE_FILTER}] | order(episodeNumber asc){${EPISODE_FIELDS}}
 }`);
 const { show, episodes } = data;
 const art = (w: number) => urlFor(show.artwork).width(w).format('webp').quality(80).url();
@@ -23,8 +24,10 @@ const paras = (show.description ?? '').split('\n\n');
       '@type': 'PodcastSeries',
       name: show.title,
       description: paras[0],
+      url: new URL('/podcast/', Astro.site ?? Astro.url).href,
       author: [{ '@type': 'Person', name: 'Kevin White' }, { '@type': 'Person', name: 'Shelly White' }],
       publisher: { '@type': 'Organization', name: 'Spirit Media Publishing' },
+      hasPart: episodes.map((ep: any) => ({ '@type': 'PodcastEpisode', name: ep.title, episodeNumber: ep.episodeNumber, url: new URL(`/podcast/${ep.slug}/`, Astro.site ?? Astro.url).href })),
     })}></script>
   </Fragment>
 
@@ -59,16 +62,20 @@ const paras = (show.description ?? '').split('\n\n');
       <div class="container-site stack">
         <p class="eyebrow">Episodes</p>
         <h2 id="episodes-heading" class="type-h2">Season 1</h2>
-        <ol class="episode-list">
-          {episodes.map((ep: any) => (
-            <li class="ep-row">
-              <span class="ep-word">{ep.word}</span>
-              <span>
-                <span class="ep-sub">{ep.subtitle}</span>
-                <span class="text-soft ep-meta">{ep.releaseDate ? `Episode ${ep.episodeNumber} · ${ep.releaseDate}` : `Episode ${ep.episodeNumber} · Coming soon`}</span>
-              </span>
-            </li>
-          ))}
+        <ol class="ep-grid">
+          {episodes.map((ep: any) => {
+            const t = episodeThumb(ep);
+            return (
+              <li>
+                <a class="ep-card" href={`/podcast/${ep.slug}/`}>
+                  {t && <img class="ep-thumb" src={t.src} srcset={t.srcset} sizes="(max-width: 760px) 100vw, 560px" width="1280" height="720" loading="lazy" decoding="async" alt={ep.thumbnail?.alt ?? ep.title} />}
+                  <span class="eyebrow">Episode {ep.episodeNumber}{ep.releaseDate && ` · ${episodeDate(ep.releaseDate)}`}</span>
+                  <h3 class="type-h3 ep-title">{ep.title}</h3>
+                  {ep.description && <p class="text-soft">{ep.description}</p>}
+                </a>
+              </li>
+            );
+          })}
         </ol>
       </div>
     </section>
@@ -78,7 +85,8 @@ const paras = (show.description ?? '').split('\n\n');
 <style>
   .show-art { width: 100%; height: auto; border-radius: var(--radius); }
   .about-show { display: grid; gap: 18px; max-width: 820px; }
-  .episode-list { list-style: none; margin: 8px 0 0; padding: 0; }
-  .ep-sub { display: block; }
-  .ep-meta { display: block; font-size: 13.5px; margin-top: 2px; }
+  .ep-grid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 48px 40px; }
+  .ep-card { display: grid; gap: 10px; text-decoration: none; color: inherit; }
+  .ep-thumb { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius); margin-bottom: 6px; }
+  .ep-card:hover .ep-title { color: var(--color-gold); }
 </style>

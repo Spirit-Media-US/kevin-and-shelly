@@ -1,0 +1,131 @@
+---
+// One page per episode (Kevin 2026-10-15: "show only relevant copy for SEO/AEO with the episodes").
+// Thumbnail → YouTube's once a YouTube link is set, and a click swaps it for the video (no player
+// script until asked for). Title, summary and the episode's Scripture from the Father's Heart Bible.
+import Layout from '../../layouts/Layout.astro';
+import { sanityClient } from '../../lib/sanity';
+import { EPISODE_FIELDS, EPISODE_FILTER, episodeDate, episodeThumb, youtubeId } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const eps = await sanityClient.fetch(`*[${EPISODE_FILTER}] | order(episodeNumber asc){${EPISODE_FIELDS}}`);
+  return eps.map((ep: any, i: number) => ({ params: { slug: ep.slug }, props: { ep, prev: eps[i - 1] ?? null, next: eps[i + 1] ?? null } }));
+}
+
+const { ep, prev, next } = Astro.props;
+const show = await sanityClient.fetch(`*[_type == "podcastShow"][0]{title, listenLinks}`);
+const thumb = episodeThumb(ep);
+const yt = youtubeId(ep.youtubeUrl);
+const site = Astro.site ?? Astro.url;
+const pageUrl = new URL(`/podcast/${ep.slug}/`, site).href;
+const seriesUrl = new URL('/podcast/', site).href;
+---
+
+<Layout title={`${ep.title} | ${show.title}`} description={ep.description} ogImage={thumb?.src}>
+  <Fragment slot="head">
+    {thumb && <link rel="preload" as="image" href={thumb.src} imagesrcset={thumb.srcset} imagesizes="(max-width: 1040px) 100vw, 980px" fetchpriority="high" />}
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'PodcastEpisode',
+      name: ep.title,
+      url: pageUrl,
+      description: ep.description,
+      episodeNumber: ep.episodeNumber,
+      ...(ep.releaseDate ? { datePublished: ep.releaseDate } : {}),
+      ...(thumb ? { image: thumb.src } : {}),
+      partOfSeries: { '@type': 'PodcastSeries', name: show.title, url: seriesUrl },
+      partOfSeason: { '@type': 'PodcastSeason', seasonNumber: ep.season ?? 1 },
+      author: [{ '@type': 'Person', name: 'Kevin White' }, { '@type': 'Person', name: 'Shelly White' }],
+      ...(yt ? { associatedMedia: { '@type': 'VideoObject', name: ep.title, description: ep.description, thumbnailUrl: thumb?.src, embedUrl: `https://www.youtube.com/embed/${yt}`, contentUrl: `https://www.youtube.com/watch?v=${yt}`, ...(ep.releaseDate ? { uploadDate: ep.releaseDate } : {}) } } : {}),
+    })}></script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Podcast', item: seriesUrl },
+        { '@type': 'ListItem', position: 2, name: ep.title, item: pageUrl },
+      ],
+    })}></script>
+  </Fragment>
+
+  <main id="main-content">
+    <section class="band band-dark ep-hero">
+      <div class="container-site ep-wrap">
+        {thumb && (
+          yt
+            ? <button class="ep-media ep-play" type="button" data-yt={yt} aria-label={`Play ${ep.title}`}>
+                <img src={thumb.src} srcset={thumb.srcset} sizes="(max-width: 1040px) 100vw, 980px" width="1280" height="720" alt={ep.thumbnail?.alt ?? ep.title} fetchpriority="high" loading="eager" decoding="async" />
+                <span class="play-icon" aria-hidden="true"></span>
+              </button>
+            : <img class="ep-media" src={thumb.src} srcset={thumb.srcset} sizes="(max-width: 1040px) 100vw, 980px" width="1280" height="720" alt={ep.thumbnail?.alt ?? ep.title} fetchpriority="high" loading="eager" decoding="async" />
+        )}
+        <div class="stack">
+          <p class="eyebrow"><a href="/podcast/">{show.title}</a> · Season {ep.season ?? 1} · Episode {ep.episodeNumber}{ep.releaseDate && ` · ${episodeDate(ep.releaseDate)}`}</p>
+          <h1 class="type-h2">{ep.title}</h1>
+          {ep.description && <p class="type-lead">{ep.description}</p>}
+          {(yt || show.listenLinks?.length > 0) && (
+            <div class="btn-row">
+              {yt && <a class="btn btn-primary" href={`https://www.youtube.com/watch?v=${yt}`} rel="noopener" target="_blank">Watch on YouTube</a>}
+              {show.listenLinks?.map((l: any) => <a class="btn btn-ghost" href={l.url} rel="noopener" target="_blank">{l.label}</a>)}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+
+    {ep.scriptureText && (
+      <section class="band band-light" aria-labelledby="scripture-heading">
+        <div class="container-site stack scripture">
+          <p class="eyebrow" id="scripture-heading">This episode's Scripture</p>
+          <figure>
+            <blockquote class="type-h3">{ep.scriptureText}</blockquote>
+            <figcaption>{ep.scriptureRef}, Father's Heart Bible</figcaption>
+          </figure>
+          {ep.scriptureUrl && <p><a class="link" href={ep.scriptureUrl}>Read {ep.scriptureRef} in the Father's Heart Bible</a></p>}
+        </div>
+      </section>
+    )}
+
+    <nav class="band band-light-deep" aria-label="More episodes">
+      <div class="container-site ep-nav">
+        {prev ? <a class="link" href={`/podcast/${prev.slug}/`}>← Episode {prev.episodeNumber}: {prev.title}</a> : <span></span>}
+        <a class="btn btn-ghost" href="/podcast/">All episodes</a>
+        {next ? <a class="link ep-next" href={`/podcast/${next.slug}/`}>Episode {next.episodeNumber}: {next.title} →</a> : <span></span>}
+      </div>
+    </nav>
+  </main>
+</Layout>
+
+<style>
+  .ep-wrap { display: grid; gap: clamp(24px, 4vw, 40px); max-width: 1040px; }
+  .ep-media { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: var(--radius); }
+  .ep-media img { width: 100%; height: 100%; border-radius: var(--radius); display: block; }
+  .ep-play { position: relative; padding: 0; border: 0; background: none; cursor: pointer; }
+  .play-icon { position: absolute; inset: 50% auto auto 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; background: rgb(27 26 25 / 0.75); }
+  .play-icon::after { content: ''; position: absolute; left: 31px; top: 24px; border-style: solid; border-width: 14px 0 14px 22px; border-color: transparent transparent transparent var(--color-on-dark); }
+  .ep-play:hover .play-icon { background: var(--color-gold); }
+  .eyebrow a { color: inherit; text-decoration: none; }
+  .scripture { max-width: 820px; }
+  .scripture figure { margin: 0; display: grid; gap: 10px; }
+  .scripture blockquote { margin: 0; line-height: 1.3; font-family: var(--font-display); }
+  .scripture figcaption { font-weight: 700; color: var(--color-soft); }
+  .ep-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; }
+  .ep-nav > * { flex: 1 1 220px; }
+  .ep-nav .btn { flex: 0 0 auto; }
+  .ep-next { text-align: right; }
+</style>
+
+<script>
+  // Click-to-play: load the YouTube player only when the viewer asks for it.
+  document.querySelectorAll<HTMLButtonElement>('.ep-play').forEach((b) => {
+    b.addEventListener('click', () => {
+      const f = document.createElement('iframe');
+      f.src = `https://www.youtube-nocookie.com/embed/${b.dataset.yt}?autoplay=1&rel=0`;
+      f.title = b.getAttribute('aria-label') ?? 'Episode video';
+      f.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      f.allowFullscreen = true;
+      // Inline styles: scoped Astro CSS does not reach elements created at runtime.
+      f.style.cssText = 'display:block;width:100%;height:auto;aspect-ratio:16/9;border:0;border-radius:var(--radius)';
+      b.replaceWith(f);
+    }, { once: true });
+  });
+</script>
