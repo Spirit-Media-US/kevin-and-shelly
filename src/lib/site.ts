@@ -1,14 +1,12 @@
 import { sanityClient } from './sanity';
 
-export const SITE_NAME = 'Kevin & Shelly';
+export const SITE_NAME = 'Kevin and Shelly';
 
 export const NAV = [
   { label: 'Story', href: '/story' },
   { label: 'Podcast', href: '/podcast' },
   { label: 'Books', href: '/books' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Events', href: '/events' },
-  { label: 'Contact', href: '/contact' },
 ];
 
 export async function getSettings() {

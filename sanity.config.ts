@@ -11,20 +11,17 @@ const SINGLETONS = [
 	{ id: 'storyPage', title: 'Story Page' },
 	{ id: 'podcastShow', title: 'Podcast Show' },
 	{ id: 'booksPage', title: 'Books Page' },
-	{ id: 'eventsPage', title: 'Events Page' },
-	{ id: 'contactPage', title: 'Contact Page' },
 ];
 const LISTS = [
 	{ type: 'podcastEpisode', title: 'Podcast Episodes' },
 	{ type: 'book', title: 'Books' },
 	{ type: 'blogPost', title: 'Blog Posts' },
-	{ type: 'event', title: 'Events' },
 	{ type: 'ministry', title: 'Ministries & Companies' },
 ];
 
 export default defineConfig({
 	name: 'kevin-and-shelly',
-	title: 'Kevin & Shelly',
+	title: 'Kevin and Shelly',
 	projectId: 'a53g9qeq',
 	dataset: 'production',
 	basePath: '/studio',

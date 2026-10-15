@@ -44,7 +44,7 @@ export default {
       title: 'Author',
       type: 'string',
       // CHANGE THIS: Set to the site owner's name
-      initialValue: 'Kevin & Shelly White',
+      initialValue: 'Kevin and Shelly White',
     },
     {
       name: 'publishDate',

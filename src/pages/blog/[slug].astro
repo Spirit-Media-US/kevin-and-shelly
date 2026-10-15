@@ -74,15 +74,15 @@ const heroImage = post.heroImage
   ? urlFor(post.heroImage).width(1200).format('webp').url()
   : 'https://cdn.sanity.io/images/a53g9qeq/production/4ae68e80c4f86290e7592129b146e7c662fde56b-1600x2400.jpg?w=1200';
 // CHANGE THIS: Match the schema's initialValue for author
-const author = post.author || 'Kevin & Shelly White';
+const author = post.author || 'Kevin and Shelly White';
 const tags = post.tags || [];
 
 const bodyHtml = renderPortableText(post.body);
 ---
 
 <Layout
-  title={post.seoTitle || `${post.title} | Kevin & Shelly Blog`}
-  description={post.seoDescription || post.excerpt || 'Read this article on the Kevin & Shelly blog'}
+  title={post.seoTitle || `${post.title} | Kevin and Shelly Blog`}
+  description={post.seoDescription || post.excerpt || 'Read this article on the Kevin and Shelly blog'}
   ogImage={heroImage}
 >
   <Fragment slot="head">
@@ -98,7 +98,7 @@ const bodyHtml = renderPortableText(post.body);
       "description": post.excerpt || post.title,
       "image": heroImage,
       "author": { "@type": "Person", "name": author },
-      "publisher": { "@type": "Organization", "name": "Kevin & Shelly", "url": "https://kevinandshelly.com" },
+      "publisher": { "@type": "Organization", "name": "Kevin and Shelly", "url": "https://kevinandshelly.com" },
       "url": `https://kevinandshelly.com/blog/${post.slug.current}`,
       "datePublished": post.publishDate
     })}></script>

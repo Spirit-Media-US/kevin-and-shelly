@@ -1,5 +1,6 @@
 ---
-// Home — hero (us) → podcast (dark) → story preview (light) → books (dark) → blog (light) → events + sign-up.
+// Home — hero (us) → podcast (dark) → story preview (light) → Shelly's new book (dark) → blog (light) → sign-up.
+// Events removed until needed (Kevin 2026-10-15).
 // Hero keeps the 100 Club pattern: srcset with a ≤640w entry, head preload with fetchpriority,
 // explicit width/height, no animation on the first section (Traits 1, 2, 7, 8).
 import Layout from '../layouts/Layout.astro';
@@ -9,12 +10,12 @@ const data = await sanityClient.fetch(`{
   "home": *[_type == "homePage"][0],
   "show": *[_type == "podcastShow"][0]{title, tagline, schedule, description, artwork},
   "episodes": *[_type == "podcastEpisode"] | order(episodeNumber asc)[0...4]{word, subtitle, episodeNumber},
-  "books": *[_type == "book" && featured == true] | order(order asc)[0...6]{title, author, cover, buyUrl},
-  "posts": *[_type == "blogPost"] | order(publishDate desc)[0...3]{title, excerpt, heroImage, publishDate, "slug": slug.current},
-  "events": *[_type == "event" && date >= now()] | order(date asc)[0...3]{title, date, location, url},
-  "eventsPage": *[_type == "eventsPage"][0]{emptyText}
+  "feature": *[_type == "book" && section == "shelly"] | order(order asc)[0]{title, author, cover, description, buyUrl, buyLabel},
+  "posts": *[_type == "blogPost"] | order(publishDate desc)[0...3]{title, excerpt, heroImage, publishDate, "slug": slug.current}
 }`);
-const { home, show, episodes, books, posts, events, eventsPage } = data;
+const { home, show, episodes, feature, posts } = data;
+const featureRatio = (() => { const m = /-(\d+)x(\d+)-/.exec(feature?.cover?.asset?._ref ?? ''); return m ? Number(m[2]) / Number(m[1]) : 1; })();
+const featureCover = (w: number) => urlFor(feature.cover).width(w).format('webp').quality(82).url();
 
 const heroSrc = (w: number) => urlFor(home.heroImage).width(w).format('webp').quality(80).url();
 // Hero is shown uncropped (Kevin 2026-10-14: the word BELOVED must show). Native width 1527px,
@@ -25,7 +26,7 @@ const showIntro = (show?.description ?? '').split('\n\n')[0];
 const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 ---
 
-<Layout title="Kevin & Shelly White | Revived by Our Father's Love" overlayHeader>
+<Layout title="Kevin and Shelly White | Revived by Our Father's Love" overlayHeader>
   <Fragment slot="head">
     <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
     <link rel="preload" as="image" href={heroSrc(1200)} imagesrcset={heroSrcset} imagesizes={heroSizes} fetchpriority="high" />
@@ -111,24 +112,24 @@ const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'nume
       </div>
     </section>
 
-    <!-- BOOKS -->
-    {books?.length > 0 && (
+    <!-- BOOKS — Shelly's new book featured, then a link to all books (Kevin 2026-10-15) -->
+    {feature && (
       <section class="band band-dark" aria-labelledby="books-heading">
-        <div class="container-site stack">
-          <p class="eyebrow">Books</p>
-          <h2 id="books-heading" class="type-h2">{home.booksHeading}</h2>
-          <ul class="book-grid">
-            {books.map((b: any) => (
-              <li>
-                <a href="/books" class="book-card">
-                  <img class="book-cover" src={urlFor(b.cover).width(360).format('webp').quality(80).url()} width="360" height="540" loading="lazy" decoding="async" alt={b.cover?.alt ?? `${b.title} cover`} />
-                  <span class="book-title">{b.title}</span>
-                  <span class="text-soft book-author">{b.author}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-          <div class="btn-row"><a class="btn btn-ghost" href="/books">See all books</a></div>
+        <div class="container-site split">
+          <a href="/books" class="feature-cover">
+            <img class="book-cover" src={featureCover(640)} srcset={`${featureCover(420)} 420w, ${featureCover(640)} 640w`}
+              sizes="(max-width: 820px) 80vw, 420px" width="640" height={Math.round(640 * featureRatio)}
+              loading="lazy" decoding="async" alt={feature.cover?.alt ?? `${feature.title} cover`} />
+          </a>
+          <div class="stack">
+            <p class="eyebrow">Books</p>
+            <h2 id="books-heading" class="type-h2">{home.booksHeading ?? 'New from Shelly'}</h2>
+            <h3 class="type-h3">{feature.title}</h3>
+            <p class="type-lead">{(feature.description ?? '').split('\n\n').slice(0, 3).join(' ')}</p>
+            {feature.buyUrl
+              ? <div class="btn-row"><a class="btn btn-primary" href={feature.buyUrl} rel="noopener" target="_blank">{feature.buyLabel ?? 'Get the book'}</a><a class="btn btn-ghost" href="/books">See all our books</a></div>
+              : <><p class="feature-avail">{feature.buyLabel ?? 'Available worldwide everywhere books are sold'}</p><div class="btn-row"><a class="btn btn-primary" href="/books">See all our books</a></div></>}
+          </div>
         </div>
       </section>
     )}
@@ -155,22 +156,14 @@ const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'nume
       </section>
     )}
 
-    <!-- EVENTS + SIGN-UP -->
-    <section class="band band-light-deep" aria-labelledby="events-heading">
+    <!-- SIGN-UP -->
+    <section class="band band-light-deep" aria-labelledby="signup-heading">
       <div class="container-site split split-top">
         <div class="stack">
-          <p class="eyebrow">Events</p>
-          <h2 id="events-heading" class="type-h2">Where we'll be</h2>
-          {events?.length > 0
-            ? <ul class="event-list">{events.map((e: any) => (
-                <li><span class="event-date">{fmt(e.date)}</span><span class="event-title">{e.title}</span>{e.location && <span class="text-soft">{e.location}</span>}</li>
-              ))}</ul>
-            : <p class="type-lead">{eventsPage?.emptyText}</p>}
-          <div class="btn-row"><a class="btn btn-ghost" href="/events">Events & speaking</a></div>
+          <h2 id="signup-heading" class="type-h2">{home.newsletterHeading}</h2>
+          <p class="type-lead">{home.newsletterText}</p>
         </div>
-        <div class="stack signup">
-          <h2 class="type-h3">{home.newsletterHeading}</h2>
-          <p class="text-soft">{home.newsletterText}</p>
+        <div class="signup">
           <div id="ghl-signup-form" class="form-placeholder">Sign-up form</div>
         </div>
       </div>
@@ -181,5 +174,7 @@ const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'nume
 <style>
 .hero { background: var(--color-stone); }
   .hero-img { width: 100%; max-width: 1527px; height: auto; aspect-ratio: 1527 / 1020; margin-inline: auto; }
+  .feature-cover { display: block; max-width: 420px; width: 100%; justify-self: center; }
+  .feature-avail { font-weight: 700; color: var(--color-gold); }
   .hero-text { display: grid; gap: 18px; padding-block: clamp(28px, 4vw, 48px) clamp(48px, 6vw, 72px); }
 </style>

@@ -3,7 +3,7 @@ export default {
   title: 'Site Settings',
   type: 'document',
   fields: [
-    { name: 'siteName', title: 'Site Name', type: 'string', initialValue: 'Kevin & Shelly' },
+    { name: 'siteName', title: 'Site Name', type: 'string', initialValue: 'Kevin and Shelly' },
     { name: 'tagline', title: 'Tagline', type: 'string' },
     { name: 'seoDescription', title: 'Default SEO Description', type: 'text', rows: 3 },
     { name: 'logo', title: 'Logo for light backgrounds (black)', type: 'image', fields: [{ name: 'alt', title: 'Alt Text', type: 'string' }] },

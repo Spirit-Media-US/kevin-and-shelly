@@ -9,7 +9,7 @@ const rawSanityPosts = await sanityClient.fetch(`
     excerpt,
     "image": coalesce(heroImage.asset->url + "?w=800&auto=format", "https://cdn.sanity.io/images/a53g9qeq/production/4ae68e80c4f86290e7592129b146e7c662fde56b-1600x2400.jpg"),
     "imagePosition": "center center",
-    "author": coalesce(author, "Kevin & Shelly White"),
+    "author": coalesce(author, "Kevin and Shelly White"),
     "date": publishDate,
     tags
   }
@@ -27,20 +27,20 @@ const SANITY_POSTS_JSON = JSON.stringify(sanityPostsFormatted);
 ---
 
 <Layout
-  title="Kevin & Shelly Blog — Kevin & Shelly Blog"
-  description="Articles, insights, and updates from Kevin & Shelly."
+  title="Blog | Kevin and Shelly"
+  description="Articles, insights, and updates from Kevin and Shelly."
   ogImage="https://cdn.sanity.io/images/a53g9qeq/production/4ae68e80c4f86290e7592129b146e7c662fde56b-1600x2400.jpg?w=1200&h=630&fit=crop"
 >
   <Fragment slot="head">
-    <meta name="keywords" content="Kevin & Shelly blog" />
+    <meta name="keywords" content="Kevin and Shelly blog" />
     <meta name="robots" content="index, follow" />
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Blog",
-      "name": "Kevin & Shelly Blog",
+      "name": "Kevin and Shelly Blog",
       "url": "https://kevinandshelly.com/blog",
-      "description": "Articles, insights, and updates from Kevin & Shelly.",
-      "publisher": { "@type": "Organization", "name": "Kevin & Shelly", "url": "https://kevinandshelly.com" }
+      "description": "Articles, insights, and updates from Kevin and Shelly.",
+      "publisher": { "@type": "Organization", "name": "Kevin and Shelly", "url": "https://kevinandshelly.com" }
     })}></script>
   </Fragment>
   <main id="main-content">

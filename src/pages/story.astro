@@ -13,7 +13,7 @@ const heroSrc = (w: number) => urlFor(page.heroImage).width(w).height(Math.round
 const heroSrcset = `${heroSrc(640)} 640w, ${heroSrc(1200)} 1200w, ${heroSrc(2000)} 2000w`;
 ---
 
-<Layout title="Our Story | Kevin & Shelly White" description={page.intro}>
+<Layout title="Our Story | Kevin and Shelly White" description={page.intro}>
   <Fragment slot="head">
     <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
     <link rel="preload" as="image" href={heroSrc(1200)} imagesrcset={heroSrcset} imagesizes="100vw" fetchpriority="high" />
