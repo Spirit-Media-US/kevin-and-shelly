@@ -36,7 +36,7 @@ Featured on fathersheartbible.com (leadership page, /podcast) and spiritmediapub
 - Colors: stone #F4F3F1, stone-deep #EAE8E4, ink #22211F, soft gray #6B6862, charcoal #1B1A19, denim #2F4A63 (accent on light), gold #E3AD3A (accent on dark).
 - Fonts: DM Serif Display (headings) + Karla (body), self-hosted on R2.
 - Home hero: "Beloved on wall" photo, shown UNCROPPED so the word BELOVED shows (Kevin).
-- Nav: Story · Podcast · Books · Blog (Events + Contact pages removed 2026-10-15; the compact footer is the contact point, schemas kept for later). Father's Heart Bible is NOT its own page — it is featured on Story and Books with Spirit Media Publishing.
+- Nav: Home · Story · Podcast · Books · Blog (Events + Contact pages removed 2026-10-15; the compact footer is the contact point, schemas kept for later). Father's Heart Bible is NOT its own page — it is featured on Story and Books with Spirit Media Publishing.
 - Emails never as plain `mailto:` — always `MailtoLink.astro`.
 - Logo: Shelly is designing it; text wordmark until `siteSettings.logo` is set.
 
@@ -48,7 +48,7 @@ Featured on fathersheartbible.com (leadership page, /podcast) and spiritmediapub
 | Home | Hero image/heading/intro/buttons, story preview, books heading, sign-up text | `homePage` |
 | Home | Podcast block, episodes, books, latest posts, upcoming events | `podcastShow`, `podcastEpisode`, `book`, `blogPost`, `event` |
 | Story | Heading, hero, intro, story sections (repeatable), ministries | `storyPage`, `ministry` |
-| Podcast | Show description, artwork, listen links, every episode | `podcastShow`, `podcastEpisode` |
+| Podcast | Show description, artwork, listen links; episode cards + one page per episode at /podcast/<slug>/ (shown once an episode has a Title; YouTube link switches thumbnail + click-to-play video) | `podcastShow`, `podcastEpisode` |
 | Books | Section labels; every book (section: shelly/kevin/fhb, cover, description, link, order); publisher block | `booksPage`, `book`, `ministry` |
 | Books | FHB block: marquee (R2 cards, same keys as fathersheartbible.com/print), chips, back-cover copy, buttons, tagline | code — FHB's verbatim brand copy, mirrors fathersheartbible.com; marquee labels hardcoded in CoverMarquee.astro (25 / 34 as of 2026-10-14) |
 | Blog | Posts (SMP blog protocol) | `blogPost` |
