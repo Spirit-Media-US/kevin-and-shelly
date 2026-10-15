@@ -3,6 +3,7 @@ import { sanityClient } from './sanity';
 export const SITE_NAME = 'Kevin and Shelly';
 
 export const NAV = [
+  { label: 'Home', href: '/' },
   { label: 'Story', href: '/story' },
   { label: 'Podcast', href: '/podcast' },
   { label: 'Books', href: '/books' },
