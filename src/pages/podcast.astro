@@ -3,7 +3,7 @@
 // listen links, then every episode as a card (thumbnail, title, summary) linking to its own page.
 import Layout from '../layouts/Layout.astro';
 import { sanityClient, urlFor } from '../lib/sanity';
-import { EPISODE_FIELDS, EPISODE_FILTER, episodeThumb } from '../lib/site';
+import { EPISODE_FIELDS, EPISODE_FILTER, episodeDate, episodeThumb } from '../lib/site';
 
 const data = await sanityClient.fetch(`{
   "show": *[_type == "podcastShow"][0],
@@ -69,7 +69,7 @@ const paras = (show.description ?? '').split('\n\n');
               <li>
                 <a class="ep-card" href={`/podcast/${ep.slug}/`}>
                   {t && <img class="ep-thumb" src={t.src} srcset={t.srcset} sizes="(max-width: 760px) 100vw, 560px" width="1280" height="720" loading="lazy" decoding="async" alt={ep.thumbnail?.alt ?? ep.title} />}
-                  <span class="eyebrow">Episode {ep.episodeNumber}</span>
+                  <span class="eyebrow">Episode {ep.episodeNumber}{ep.releaseDate && ` · ${episodeDate(ep.releaseDate)}`}</span>
                   <h3 class="type-h3 ep-title">{ep.title}</h3>
                   {ep.description && <p class="text-soft">{ep.description}</p>}
                 </a>

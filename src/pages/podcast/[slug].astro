@@ -4,7 +4,7 @@
 // script until asked for). Title, summary and the episode's Scripture from the Father's Heart Bible.
 import Layout from '../../layouts/Layout.astro';
 import { sanityClient } from '../../lib/sanity';
-import { EPISODE_FIELDS, EPISODE_FILTER, episodeThumb, youtubeId } from '../../lib/site';
+import { EPISODE_FIELDS, EPISODE_FILTER, episodeDate, episodeThumb, youtubeId } from '../../lib/site';
 
 export async function getStaticPaths() {
   const eps = await sanityClient.fetch(`*[${EPISODE_FILTER}] | order(episodeNumber asc){${EPISODE_FIELDS}}`);
@@ -59,7 +59,7 @@ const seriesUrl = new URL('/podcast/', site).href;
             : <img class="ep-media" src={thumb.src} srcset={thumb.srcset} sizes="(max-width: 1040px) 100vw, 980px" width="1280" height="720" alt={ep.thumbnail?.alt ?? ep.title} fetchpriority="high" loading="eager" decoding="async" />
         )}
         <div class="stack">
-          <p class="eyebrow"><a href="/podcast/">{show.title}</a> · Season {ep.season ?? 1} · Episode {ep.episodeNumber}</p>
+          <p class="eyebrow"><a href="/podcast/">{show.title}</a> · Season {ep.season ?? 1} · Episode {ep.episodeNumber}{ep.releaseDate && ` · ${episodeDate(ep.releaseDate)}`}</p>
           <h1 class="type-h2">{ep.title}</h1>
           {ep.description && <p class="type-lead">{ep.description}</p>}
           {(yt || show.listenLinks?.length > 0) && (

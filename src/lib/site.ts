@@ -45,3 +45,7 @@ export function episodeThumb(ep: any) {
   const u = (w: number) => urlFor(ep.thumbnail).width(w).height(Math.round((w * 9) / 16)).format('webp').quality(80).url();
   return { src: u(1280), srcset: `${u(640)} 640w, ${u(960)} 960w, ${u(1280)} 1280w` };
 }
+
+/** "November 2, 2026" from a Sanity date (no timezone shift). */
+export const episodeDate = (d?: string) =>
+  d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) : '';
