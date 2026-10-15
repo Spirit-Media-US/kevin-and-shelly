@@ -4,12 +4,43 @@ import { structureTool } from 'sanity/structure';
 import { media } from 'sanity-plugin-media';
 import { schemaTypes } from './studio/schemaTypes';
 
+// Single pages (one document each) open directly; everything else is a list.
+const SINGLETONS = [
+	{ id: 'siteSettings', title: 'Site Settings' },
+	{ id: 'homePage', title: 'Home Page' },
+	{ id: 'storyPage', title: 'Story Page' },
+	{ id: 'podcastShow', title: 'Podcast Show' },
+	{ id: 'booksPage', title: 'Books Page' },
+];
+const LISTS = [
+	{ type: 'podcastEpisode', title: 'Podcast Episodes' },
+	{ type: 'book', title: 'Books' },
+	{ type: 'blogPost', title: 'Blog Posts' },
+	{ type: 'ministry', title: 'Ministries & Companies' },
+];
+
 export default defineConfig({
-	name: 'REPLACE_SITE_SLUG',
-	title: 'REPLACE_SITE_TITLE',
-	projectId: 'REPLACE_PROJECT_ID',
+	name: 'kevin-and-shelly',
+	title: 'Kevin and Shelly',
+	projectId: 'a53g9qeq',
 	dataset: 'production',
 	basePath: '/studio',
-	plugins: [structureTool(), visionTool(), media()],
-	schema: { types: schemaTypes },
+	plugins: [
+		structureTool({
+			structure: (S) =>
+				S.list()
+					.title('Content')
+					.items([
+						...SINGLETONS.map((s) => S.listItem().title(s.title).id(s.id).child(S.document().schemaType(s.id).documentId(s.id))),
+						S.divider(),
+						...LISTS.map((l) => S.documentTypeListItem(l.type).title(l.title)),
+					]),
+		}),
+		visionTool(),
+		media(),
+	],
+	schema: {
+		types: schemaTypes,
+		templates: (templates) => templates.filter(({ schemaType }) => !SINGLETONS.some((s) => s.id === schemaType)),
+	},
 });

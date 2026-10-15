@@ -1,12 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import '../styles/global.css';
 ---
-<Layout title="Page Not Found">
-  <Fragment slot="head"><meta name="robots" content="noindex, nofollow" /></Fragment>
-  <main class="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-    <h1 class="text-4xl font-bold mb-4">404</h1>
-    <p class="text-lg mb-8">Page not found.</p>
-    <a href="/" class="underline">Go home</a>
+<Layout title="Page Not Found | Kevin and Shelly" noindex>
+  <main id="main-content" class="band band-light">
+    <div class="container-site stack">
+      <p class="eyebrow">404</p>
+      <h1 class="type-hero">This page isn't here.</h1>
+      <p class="type-lead">The page may have moved. Start from the home page or listen to the podcast.</p>
+      <div class="btn-row"><a class="btn btn-primary" href="/">Go home</a><a class="btn btn-ghost" href="/podcast">The podcast</a></div>
+    </div>
   </main>
 </Layout>

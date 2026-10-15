@@ -1,0 +1,145 @@
+---
+// Books (Kevin 2026-10-14): New from Shelly (Zacchaeus, large, with description) → Kevin's books →
+// Father's Heart Bible section (the FHB homepage marquee + FATHER/SON/SPIRIT + back-cover copy +
+// buttons + tagline, every FHB link going to the print page) → Spirit Media Publishing + FHB cards.
+// Covers sit on charcoal bands; the FHB 3D covers sit on stone, as on fathersheartbible.com.
+import CoverMarquee from '../components/CoverMarquee.astro';
+import Layout from '../layouts/Layout.astro';
+import { sanityClient, urlFor } from '../lib/sanity';
+
+const data = await sanityClient.fetch(`{
+  "page": *[_type == "booksPage"][0],
+  "shelly": *[_type == "book" && section == "shelly"] | order(order asc){title, subtitle, author, cover, description, buyUrl, buyLabel},
+  "kevin": *[_type == "book" && section == "kevin"] | order(order asc){title, author, cover, description, buyUrl, buyLabel},
+  "ministries": *[_type == "ministry"] | order(order asc){name, summary, url, linkLabel}
+}`);
+const { page, shelly, kevin, ministries } = data;
+const feature = shelly?.[0];
+const cover = (b: any, w: number) => urlFor(b.cover).width(w).format('webp').quality(82).url();
+const ratio = (b: any) => {
+  const m = /-(\d+)x(\d+)-/.exec(b?.cover?.asset?._ref ?? '');
+  return m ? Number(m[2]) / Number(m[1]) : 1.5;
+};
+const FHB_PRINT = 'https://fathersheartbible.com/print/';
+const FHB_READ = 'https://fathersheartbible.com/read/';
+---
+
+<Layout title="Books | Kevin and Shelly White" description="Books by Shelly White and Kevin White, and the Father's Heart Bible in Divine Voice Color, published by Spirit Media Publishing. Available worldwide everywhere books are sold.">
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
+    {feature && <link rel="preload" as="image" href={cover(feature, 640)} imagesrcset={`${cover(feature, 420)} 420w, ${cover(feature, 640)} 640w`} imagesizes="(max-width: 820px) 80vw, 520px" fetchpriority="high" />}
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: [...(shelly ?? []), ...(kevin ?? [])].map((b: any, i: number) => ({ '@type': 'ListItem', position: i + 1, item: { '@type': 'Book', name: b.title, author: { '@type': 'Person', name: b.author }, url: b.buyUrl } })),
+    })}></script>
+  </Fragment>
+
+  <main id="main-content">
+    <!-- One system for every section: .section-title heading, .book-title for each book,
+         .book-text for every description (Kevin 2026-10-14: "the sections need to be uniform"). -->
+    {feature && (
+      <section class="band band-dark" aria-labelledby="new-heading">
+        <div class="container-site section">
+          <h1 id="new-heading" class="type-h2 section-title">{page?.newLabel ?? 'New from Shelly'}</h1>
+          <article class="book-row book-row--feature">
+            <img class="book-cover" src={cover(feature, 640)} srcset={`${cover(feature, 420)} 420w, ${cover(feature, 640)} 640w`}
+              sizes="(max-width: 820px) 80vw, 420px" width="640" height={Math.round(640 * ratio(feature))}
+              alt={feature.cover?.alt ?? `${feature.title} cover`} fetchpriority="high" loading="eager" decoding="async" />
+            <div class="stack">
+              <h2 class="book-title">{feature.title}</h2>
+              <p class="book-author">{feature.author}</p>
+              <div class="book-text">{(feature.description ?? '').split('\n\n').map((p: string) => <p>{p}</p>)}</div>
+              {feature.buyUrl
+                ? <a class="link book-cta" href={feature.buyUrl} rel="noopener" target="_blank">{feature.buyLabel ?? 'Get the book'}</a>
+                : <p class="book-cta book-avail">{feature.buyLabel ?? 'Available worldwide everywhere books are sold'}</p>}
+            </div>
+          </article>
+        </div>
+      </section>
+    )}
+
+    {kevin?.length > 0 && (
+      <section class="band band-dark band-divided" aria-labelledby="kevin-heading">
+        <div class="container-site section">
+          <h2 id="kevin-heading" class="type-h2 section-title">{page?.kevinHeading ?? "Kevin's Books"}</h2>
+          <ul class="books-grid">
+            {kevin.map((b: any) => (
+              <li class="book-row">
+                <img class="book-cover" src={cover(b, 360)} width="360" height={Math.round(360 * ratio(b))} loading="lazy" decoding="async" alt={b.cover?.alt ?? `${b.title} cover`} />
+                <div class="stack">
+                  <h3 class="book-title">{b.title}</h3>
+                  <p class="book-author">{b.author}</p>
+                  <p class="book-text">{b.description}</p>
+                  {b.buyUrl && <a class="link book-cta" href={b.buyUrl} rel="noopener" target="_blank">{b.buyLabel ?? 'Get the book'}</a>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    <!-- Father's Heart Bible — same marquee, chips and back-cover copy as fathersheartbible.com -->
+    <section class="band band-light" aria-labelledby="fhb-heading">
+      <div class="container-site section">
+        <h2 id="fhb-heading" class="type-h2 section-title">Father&rsquo;s Heart Bible™ + Divine Voice Color™</h2>
+      </div>
+      <CoverMarquee showTitle={false} />
+      <div class="container-site section fhb-copy">
+        <p class="book-text">For a hundred and twenty-five years, red letters have shown you the Son speaking. Our Father speaks more than three times as often — 128,579 words across 5,615 verses. Father's Heart Bible is the first Bible in print where you can see who is speaking.</p>
+        <p class="book-text">Our Father's words in <strong class="v-father">BLUE</strong>. The Son's in <strong class="v-son">RED</strong>. The Spirit's in <strong class="v-spirit">PURPLE</strong>.</p>
+        <p class="book-text">More than one word in four of the Bible is a divine voice speaking. This is not a study Bible about our Father. It is His voice, made visible, so you can hear it.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href={FHB_PRINT}>Get It in Print</a>
+          <a class="btn btn-ghost" href={FHB_READ}>Read &amp; Listen Free</a>
+        </div>
+        <p class="book-text fhb-tagline">Receive the Father. Hear his voice. His heart is for you.</p>
+      </div>
+    </section>
+
+    {ministries?.length > 0 && (
+      <section class="band band-light-deep" aria-labelledby="pub-heading">
+        <div class="container-site section">
+          <h2 id="pub-heading" class="type-h2 section-title">{page?.publisherHeading ?? 'Published by Spirit Media Publishing'}</h2>
+          <ul class="pub-list">
+            {ministries.map((m: any) => (
+              <li class="stack">
+                <h3 class="book-title">{m.name}</h3>
+                <p class="book-text">{m.summary}</p>
+                {m.url && <a class="link book-cta" href={m.name === "Father's Heart Bible" ? FHB_PRINT : m.url} rel="noopener">{m.linkLabel ?? 'Visit'}</a>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </main>
+</Layout>
+
+<style>
+  .section { display: grid; gap: 28px; }
+  .section-title { margin: 0; }
+  .band-divided { border-top: 1px solid var(--color-line-dark); }
+  /* Every book uses the same row: cover left, text right. The feature only gets a bigger cover. */
+  .book-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 28px; align-items: start; }
+  .book-row--feature { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
+  @media (max-width: 820px) { .book-row--feature { grid-template-columns: 1fr; } .book-row--feature .book-cover { max-width: 80vw; } }
+  @media (max-width: 480px) { .book-row { grid-template-columns: 110px minmax(0, 1fr); gap: 18px; } }
+  .books-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 48px 48px; }
+  .book-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 2.4vw, 30px); line-height: 1.15; margin: 0; }
+  .book-author { margin: 0; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--color-soft); }
+  .band-dark .book-author { color: var(--color-on-dark-soft); }
+  .book-text { font-size: 17px; line-height: 1.65; color: var(--color-soft); margin: 0; }
+  .book-text p + p { margin-top: 0.9em; }
+  .band-dark .book-text { color: var(--color-on-dark-soft); }
+  .book-cta { font-size: 17px; }
+  .book-avail { font-weight: 700; color: var(--color-gold); margin: 0; }
+  .fhb-copy { gap: 18px; padding-top: 28px; }
+  .fhb-copy > * { max-width: 820px; }
+  .fhb-tagline { color: var(--color-ink); font-weight: 700; }
+  .v-father { color: var(--color-voice-father); }
+  .v-son { color: var(--color-voice-son); }
+  .v-spirit { color: var(--color-voice-spirit); }
+  .pub-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px 48px; }
+</style>
